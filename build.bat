@@ -3,7 +3,7 @@ setlocal
 
 call vcvars64 >NUL
 
-set outputFile=%RootPath%/src/main.c
+set outputFile=%RootPath%/src/*.c
 
 set includeDir=-I%RootPath%/include
 set srcFiles=%outputFile%

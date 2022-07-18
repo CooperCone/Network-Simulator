@@ -1,2 +1,5 @@
 */build/
 build/
+tools/unitTest/env/
+.vscode/
+test/bin/
