@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 void handleNICQueueOutEvent(EventData data) {
     NICQueueEventData *d = data;
@@ -63,9 +64,31 @@ void handleNICProcessOutEvent(EventData data) {
 
     Buffer buff = bufferQueue_pop(&(card->outgoingQueue));
 
+    EthernetHeader ethHeader = {0};
+    { // Fill Header
+        memset(ethHeader.preamble, EthPreambleStart, 7);
+        memset(ethHeader.preamble + 7, EthPreambleEnd, 1);
+
+        memcpy(ethHeader.dstAddr, card->terminal.other->card->address, sizeof(MACAddress));
+        memcpy(ethHeader.srcAddr, card->address, sizeof(MACAddress));
+
+        memcpy(ethHeader.type, (u16*)&(buff.dataSize), 2);
+    }
+
+    // TODO: CRC
+
+    // Copy header, data, and crc
+    Buffer ethBuff = {
+        .dataSize=buff.dataSize + sizeof(EthernetHeader),
+    };
+    ethBuff.data = malloc(ethBuff.dataSize);
+
+    memcpy(ethBuff.data, &ethHeader, sizeof(EthernetHeader));
+    memcpy(ethBuff.data + sizeof(EthernetHeader), buff.data, buff.dataSize);
+
     // Send buffer over wire
     WireTerminalReceiveData receiveEventData = {0};
-    receiveEventData.data = buff;
+    receiveEventData.data = ethBuff;
     receiveEventData.receiver = card->terminal.other->card;
     PostEvent(handleWireTerminalReceive, &receiveEventData, sizeof(receiveEventData), 0);
 
@@ -91,6 +114,21 @@ void handleNICProcessInEvent(EventData data) {
     }
 
     Buffer buff = bufferQueue_pop(&(card->incomingQueue));
+
+    printf("Got %d bytes\n", buff.dataSize);
+
+    // Unwrap ethernet header
+    EthernetHeader header = {0};
+    memcpy(&header, buff.data, sizeof(EthernetHeader));
+
+    Buffer newBuff = {
+        .dataSize=buff.dataSize - sizeof(EthernetHeader),
+    };
+    newBuff.data = malloc(newBuff.dataSize);
+
+    memcpy(newBuff.data, buff.data + sizeof(EthernetHeader), newBuff.dataSize);
+
+    printf("Data: %s\n", newBuff.data);
 
     // Figure out where to send data
 

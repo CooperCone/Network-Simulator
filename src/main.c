@@ -17,19 +17,25 @@ int main(int argc, char **argv) {
         .incomingQueue=bufferQueue_create(8),
         .terminal.card=&card1,
     };
+    u8 mac1[] = { 0x10, 0x10, 0x10, 0x10, 0x10, 0x10 };
+    memcpy(card1.address, mac1, sizeof(MACAddress));
     NetworkInterfaceCard card2 = {
         .outgoingQueue=bufferQueue_create(8),
         .incomingQueue=bufferQueue_create(8),
         .terminal.card=&card2,
     };
+    u8 mac2[] = { 0x20, 0x20, 0x20, 0x20, 0x20, 0x20 };
+    memcpy(card1.address, mac2, sizeof(MACAddress));
     wireTerminal_connect(&(card1.terminal), &(card2.terminal));
 
     // Set up initial traffic
 
     NICQueueEventData queueEventData = {
         .card=&card1,
-        .data=(Buffer){0}
     };
+    queueEventData.data.data = malloc(9);
+    memcpy(queueEventData.data.data, "tmp data", 9);
+    queueEventData.data.dataSize = 9;
 
     PostEvent(handleNICQueueOutEvent, &queueEventData, sizeof(queueEventData), 0);
 

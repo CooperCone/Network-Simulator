@@ -6,8 +6,25 @@
 #include "bufferQueue.h"
 #include "physicalLayer.h"
 
+// TODO: Should this really be a u64?
+typedef u8 MACAddress[6];
+
+#define EthPreambleStart 0b10101010
+#define EthPreambleEnd 0b10101011
+
+#pragma pack(push)
+typedef struct {
+    u8 preamble[8];
+    MACAddress dstAddr;
+    MACAddress srcAddr;
+    u8 type[2];
+} EthernetHeader;
+#pragma pack(pop)
+
 typedef struct NetworkInterfaceCard {
     bool isBusy;
+
+    MACAddress address;
 
     WireTerminal terminal;
 
