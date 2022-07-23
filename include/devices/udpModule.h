@@ -6,7 +6,7 @@
 
 typedef u16 PortNumber;
 
-typedef struct {
+typedef struct UDPModule {
     IPModule *layer3Provider;
 
     BufferQueue outgoingQueue;

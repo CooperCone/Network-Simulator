@@ -1,8 +1,4 @@
 - Base interface
-  - Layer3
-    - Base in IP interface
-  - Layer4
-    - Base in UDP Interface
   - Layer7
     - Echo Client
     - Echo Server

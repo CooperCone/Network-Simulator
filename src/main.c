@@ -30,16 +30,34 @@ int main(int argc, char **argv) {
     module1.outgoingQueue = bufferQueue_create(8);
     module1.layer2Provider = &card1;
 
+    card1.layer3Provider = &module1;
+
     UDPModule udpModule1 = {0};
     udpModule1.incomingQueue = bufferQueue_create(8);
     udpModule1.outgoingQueue = bufferQueue_create(8);
     udpModule1.layer3Provider = &module1;
+
+    module1.layer4Provider = &udpModule1;
 
     NetworkInterfaceCard card2 = {0};
     card2.outgoingQueue = bufferQueue_create(8);
     card2.incomingQueue = bufferQueue_create(8);
     card2.layer1Provider = stableWire_create();
     card2.layer1Provider->card = &card2;
+
+    IPModule module2 = {0};
+    module2.incomingQueue = bufferQueue_create(8);
+    module2.outgoingQueue = bufferQueue_create(8);
+    module2.layer2Provider = &card2;
+
+    card2.layer3Provider = &module2;
+
+    UDPModule udpModule2 = {0};
+    udpModule2.incomingQueue = bufferQueue_create(8);
+    udpModule2.outgoingQueue = bufferQueue_create(8);
+    udpModule2.layer3Provider = &module2;
+
+    module2.layer4Provider = &udpModule2;
 
     u8 mac2[] = { 0x20, 0x20, 0x20, 0x20, 0x20, 0x20 };
     memcpy(card2.address, mac2, sizeof(MACAddress));

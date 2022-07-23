@@ -21,12 +21,16 @@ typedef struct {
 } EthernetHeader;
 #pragma pack(pop)
 
+// TODO: Layer provider interface
+struct IPModule;
+
 typedef struct NetworkInterfaceCard {
     bool isBusy;
 
     MACAddress address;
 
     Layer1Provider *layer1Provider;
+    struct IPModule *layer3Provider;
 
     // TODO: Should this be based on number of bytes?
     BufferQueue outgoingQueue;

@@ -1,5 +1,7 @@
 #include "devices/networkInterfaceCard.h"
 
+#include "devices/ipModule.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -115,8 +117,6 @@ void handleNICProcessInEvent(EventData data) {
 
     Buffer buff = bufferQueue_pop(&(card->incomingQueue));
 
-    printf("Got %d bytes\n", buff.dataSize);
-
     // Unwrap ethernet header
     EthernetHeader header = {0};
     memcpy(&header, buff.data, sizeof(EthernetHeader));
@@ -128,9 +128,13 @@ void handleNICProcessInEvent(EventData data) {
 
     memcpy(newBuff.data, buff.data + sizeof(EthernetHeader), newBuff.dataSize);
 
-    printf("Data: %s\n", newBuff.data);
-
     // Figure out where to send data
+    IPQueueEventData newEvent = {
+        .data=newBuff,
+        .module=card->layer3Provider
+    };
+    PostEvent(handleIPModuleQueueInEvent, &newEvent, sizeof(newEvent), 0);
+
 
     // Set is busy
     card->isBusy = true;

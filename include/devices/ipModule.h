@@ -8,9 +8,12 @@
 
 typedef u8 IPAddress[4];
 
-typedef struct {
+struct UDPModule;
+
+typedef struct IPModule {
     IPAddress address;
     NetworkInterfaceCard *layer2Provider;
+    struct UDPModule *layer4Provider;
 
     BufferQueue outgoingQueue;
     BufferQueue incomingQueue;
