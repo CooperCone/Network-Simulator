@@ -1,8 +1,11 @@
+- Logging
+  - Logging at all layers?
+
+- Delay modelling
+
+- Device configuration
+
 - MVP
-  - Layer1
-    - reliable connections
-  - Layer2
-    - ethernet framing
   - Layer3
     - ip interface
     - ip header
@@ -10,9 +13,6 @@
   - Layer4
     - udp interface
     - udp header
-
-- Logging
-  - Logging at all layers?
 
 - Reliability
   - Layer1

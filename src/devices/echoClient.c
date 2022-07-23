@@ -5,13 +5,14 @@
 #include <stdio.h>
 
 void echoClient_send(EchoClient *client, char *msg) {
-
     Buffer buff = {0};
     buff.dataSize = strlen(msg) + 2;
     buff.data = calloc(buff.dataSize, 1);
     buff.data[0] = 0;
     memcpy(buff.data + 1, msg, strlen(msg));
     buff.data[buff.dataSize - 1] = '\0';
+
+    printf("Echo Client %u sending: %s\n", client->id, msg);
 
     EchoClientEventData data = {
         .client=client,

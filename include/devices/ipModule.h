@@ -11,6 +11,8 @@ typedef u8 IPAddress[4];
 struct UDPModule;
 
 typedef struct IPModule {
+    u64 deviceID;
+
     IPAddress address;
     NetworkInterfaceCard *layer2Provider;
     struct UDPModule *layer4Provider;

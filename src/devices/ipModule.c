@@ -2,6 +2,8 @@
 
 #include "devices/udpModule.h"
 
+#include "log.h"
+
 #include <assert.h>
 #include <stdio.h>
 
@@ -12,6 +14,7 @@ void handleIPModuleQueueOutEvent(EventData data) {
 
     // If queue full, drop traffic
     if (queue->numBuffers == queue->maxBuffers) {
+        log(module->deviceID, "IP: -> Queue Full, Dropping");
         return;
     }
 
@@ -25,6 +28,7 @@ void handleIPModuleQueueOutEvent(EventData data) {
         };
         PostEvent(handleIPProcessOutEvent, &processEvent, sizeof(processEvent), 0);
     }
+    log(module->deviceID, "IP: -> Queueing Data");
 }
 
 void handleIPModuleQueueInEvent(EventData data) {
@@ -34,6 +38,7 @@ void handleIPModuleQueueInEvent(EventData data) {
 
     // If queue is full, drop traffic
     if (queue->numBuffers == queue->maxBuffers) {
+        log(module->deviceID, "IP: <- Queue Full, Dropping");
         return;
     }
 
@@ -47,6 +52,8 @@ void handleIPModuleQueueInEvent(EventData data) {
         };
         PostEvent(handleIPProcessInEvent, &processEvent, sizeof(processEvent), 0);
     }
+
+    log(module->deviceID, "IP: <- Queueing Data");
 }
 
 void handleIPProcessOutEvent(EventData data) {
@@ -74,6 +81,8 @@ void handleIPProcessOutEvent(EventData data) {
     module->isBusy = true;
 
     PostEvent(handleIPProcessOutEvent, e, sizeof(IPProcessEventData), 0);
+
+    log(module->deviceID, "IP: -> Sending Data");
 }
 
 void handleIPProcessInEvent(EventData data) {
@@ -102,5 +111,5 @@ void handleIPProcessInEvent(EventData data) {
     // and create new nic process out event
     PostEvent(handleIPProcessInEvent, e, sizeof(IPProcessEventData), 0);
 
-    printf("IP received data\n");
+    log(module->deviceID, "IP: <- Received Data, Forwarding Up");
 }

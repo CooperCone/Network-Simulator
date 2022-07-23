@@ -2,6 +2,8 @@
 
 #include "devices/echoClient.h"
 
+#include "log.h"
+
 #include <assert.h>
 #include <stdio.h>
 
@@ -12,6 +14,7 @@ void handleUDPModuleQueueOutEvent(EventData data) {
 
     // If queue full, drop traffic
     if (queue->numBuffers == queue->maxBuffers) {
+        log(module->deviceID, "UDP: -> Queue Full, Dropping");
         return;
     }
 
@@ -25,6 +28,8 @@ void handleUDPModuleQueueOutEvent(EventData data) {
         };
         PostEvent(handleUDPProcessOutEvent, &processEvent, sizeof(processEvent), 0);
     }
+
+    log(module->deviceID, "UDP: -> Queueing Data");
 }
 
 void handleUDPModuleQueueInEvent(EventData data) {
@@ -34,6 +39,7 @@ void handleUDPModuleQueueInEvent(EventData data) {
 
     // If queue is full, drop traffic
     if (queue->numBuffers == queue->maxBuffers) {
+        log(module->deviceID, "UDP: <- Queue Full, Dropping");
         return;
     }
 
@@ -47,6 +53,8 @@ void handleUDPModuleQueueInEvent(EventData data) {
         };
         PostEvent(handleUDPProcessInEvent, &processEvent, sizeof(processEvent), 0);
     }
+
+    log(module->deviceID, "UDP: <- Queueing Data");
 }
 
 void handleUDPProcessOutEvent(EventData data) {
@@ -74,6 +82,8 @@ void handleUDPProcessOutEvent(EventData data) {
     module->isBusy = true;
 
     PostEvent(handleUDPProcessOutEvent, e, sizeof(IPProcessEventData), 0);
+
+    log(module->deviceID, "UDP: -> Sending Data");
 }
 
 void handleUDPProcessInEvent(EventData data) {
@@ -102,5 +112,5 @@ void handleUDPProcessInEvent(EventData data) {
     // and create new nic process out event
     PostEvent(handleUDPProcessInEvent, e, sizeof(UDPProcessEventData), 0);
 
-    printf("UDP received data\n");
+    log(module->deviceID, "UDP: <- ReceivingData, Forwarding Up");
 }

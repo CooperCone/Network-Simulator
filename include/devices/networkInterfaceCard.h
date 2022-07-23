@@ -25,6 +25,8 @@ typedef struct {
 struct IPModule;
 
 typedef struct NetworkInterfaceCard {
+    u64 deviceID;
+
     bool isBusy;
 
     MACAddress address;

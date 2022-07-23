@@ -22,8 +22,6 @@ void handleLayer1Receive(EventData data) {
     d->receiver->injectError(d->receiver, &(newData.data));
 
     PostEvent(handleNICQueueInEvent, &newData, sizeof(newData), 0);
-
-    printf("Receiving data\n");
 }
 
 Layer1Provider *stableWire_create() {

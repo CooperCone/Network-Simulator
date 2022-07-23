@@ -17,6 +17,7 @@ typedef struct {
 } Event;
 
 void PostEvent(HandleEvent handler, EventData data, u64 dataSize, u64 delay);
+u64 CurTime();
 
 typedef struct {
     Event *event;

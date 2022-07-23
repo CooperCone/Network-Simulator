@@ -18,6 +18,7 @@ int main(int argc, char **argv) {
 
     // Configuration
     NetworkInterfaceCard card1 = {0};
+    card1.deviceID = 1;
     card1.outgoingQueue = bufferQueue_create(8);
     card1.incomingQueue = bufferQueue_create(8);
     card1.layer1Provider = stableWire_create();
@@ -27,6 +28,7 @@ int main(int argc, char **argv) {
     memcpy(card1.address, mac1, sizeof(MACAddress));
 
     IPModule module1 = {0};
+    module1.deviceID = 1;
     module1.incomingQueue = bufferQueue_create(8);
     module1.outgoingQueue = bufferQueue_create(8);
     module1.layer2Provider = &card1;
@@ -34,6 +36,7 @@ int main(int argc, char **argv) {
     card1.layer3Provider = &module1;
 
     UDPModule udpModule1 = {0};
+    udpModule1.deviceID = 1;
     udpModule1.incomingQueue = bufferQueue_create(8);
     udpModule1.outgoingQueue = bufferQueue_create(8);
     udpModule1.layer3Provider = &module1;
@@ -47,12 +50,14 @@ int main(int argc, char **argv) {
     udpModule1.layer7Provider = &echo1;
 
     NetworkInterfaceCard card2 = {0};
+    card2.deviceID = 2;
     card2.outgoingQueue = bufferQueue_create(8);
     card2.incomingQueue = bufferQueue_create(8);
     card2.layer1Provider = stableWire_create();
     card2.layer1Provider->card = &card2;
 
     IPModule module2 = {0};
+    module2.deviceID = 2;
     module2.incomingQueue = bufferQueue_create(8);
     module2.outgoingQueue = bufferQueue_create(8);
     module2.layer2Provider = &card2;
@@ -60,6 +65,7 @@ int main(int argc, char **argv) {
     card2.layer3Provider = &module2;
 
     UDPModule udpModule2 = {0};
+    udpModule2.deviceID = 2;
     udpModule2.incomingQueue = bufferQueue_create(8);
     udpModule2.outgoingQueue = bufferQueue_create(8);
     udpModule2.layer3Provider = &module2;
@@ -105,4 +111,8 @@ void PostEvent(HandleEvent handler, EventData data, u64 dataSize, u64 delay) {
     };
 
     eventQueue_push(&eventQueue, node);
+}
+
+u64 CurTime() {
+    return time;
 }

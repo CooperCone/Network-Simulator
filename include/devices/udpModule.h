@@ -9,6 +9,8 @@ typedef u16 PortNumber;
 struct EchoClient;
 
 typedef struct UDPModule {
+    u64 deviceID;
+
     IPModule *layer3Provider;
     struct EchoClient *layer7Provider;
 

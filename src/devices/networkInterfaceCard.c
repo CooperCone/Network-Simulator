@@ -2,6 +2,8 @@
 
 #include "devices/ipModule.h"
 
+#include "log.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -13,6 +15,7 @@ void handleNICQueueOutEvent(EventData data) {
 
     // If queue full, drop traffic
     if (queue->numBuffers == queue->maxBuffers) {
+        log(card->deviceID, "NIC: -> Queue Full, Dropping");
         return;
     }
 
@@ -27,7 +30,7 @@ void handleNICQueueOutEvent(EventData data) {
         PostEvent(handleNICProcessOutEvent, &processEvent, sizeof(processEvent), 0);
     }
 
-    printf("Queueing data\n");
+    log(card->deviceID, "NIC: -> Queueing data");
 }
 
 void handleNICQueueInEvent(EventData data) {
@@ -37,6 +40,7 @@ void handleNICQueueInEvent(EventData data) {
 
     // If queue is full, drop traffic
     if (queue->numBuffers == queue->maxBuffers) {
+        log(card->deviceID, "NIC: <- Queue Full, Dropping");
         return;
     }
 
@@ -51,7 +55,7 @@ void handleNICQueueInEvent(EventData data) {
         PostEvent(handleNICProcessInEvent, &processEvent, sizeof(processEvent), 0);
     }
 
-    printf("Queueing data for receive\n");
+    log(card->deviceID, "NIC: <- Queueing data");
 }
 
 void handleNICProcessOutEvent(EventData data) {
@@ -102,7 +106,7 @@ void handleNICProcessOutEvent(EventData data) {
 
     PostEvent(handleNICProcessOutEvent, e, sizeof(NICProcessEventData), 0);
 
-    printf("Sending data\n");
+    log(card->deviceID, "NIC: -> Sending Data");
 }
 
 void handleNICProcessInEvent(EventData data) {
@@ -135,7 +139,6 @@ void handleNICProcessInEvent(EventData data) {
     };
     PostEvent(handleIPModuleQueueInEvent, &newEvent, sizeof(newEvent), 0);
 
-
     // Set is busy
     card->isBusy = true;
 
@@ -143,5 +146,5 @@ void handleNICProcessInEvent(EventData data) {
     // and create new nic process out event
     PostEvent(handleNICProcessInEvent, e, sizeof(NICProcessEventData), 0);
 
-    printf("NIC Received data\n");
+    log(card->deviceID, "NIC: <- Received Data, Forwarding Up");
 }
