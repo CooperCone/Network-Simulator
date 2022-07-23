@@ -1,33 +1,40 @@
-# TODO
+- Base interface
+  - Layer3
+    - Base in IP interface
+  - Layer4
+    - Base in UDP Interface
+  - Layer7
+    - Echo Client
+    - Echo Server
 
-- [ ] MVP
-  - [x] Layer1
-    - [x] reliable connections
-  - [x] Layer2
-    - [x] ethernet framing
-  - [ ] Layer3
-    - [x] ip interface
-    - [ ] ip header
-    - [ ] basic forwarding (no routing)
-  - [ ] Layer4
-    - [ ] udp interface
-    - [ ] udp header
+- MVP
+  - Layer1
+    - reliable connections
+  - Layer2
+    - ethernet framing
+  - Layer3
+    - ip interface
+    - ip header
+    - basic forwarding (no routing)
+  - Layer4
+    - udp interface
+    - udp header
 
-- [ ] Logging
-  - [ ] Logging at all layers?
+- Logging
+  - Logging at all layers?
 
-- [ ] Reliability
-  - [ ] Layer1
-    - [ ] single bit errors
-    - [ ] burst errors
-  - [ ] Layer2
-    - [ ] checksum
-    - [ ] crc
-  - [ ] Layer4
-    - [ ] checksum
+- Reliability
+  - Layer1
+    - single bit errors
+    - burst errors
+  - Layer2
+    - checksum
+    - crc
+  - Layer4
+    - checksum
 
-- [ ] Switches
+- Switches
 
-- [ ] Routers
+- Routers
 
-- [ ] TCP
+- TCP

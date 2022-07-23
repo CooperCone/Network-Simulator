@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "event.h"
+#include "devices/udpModule.h"
 #include "devices/ipModule.h"
 #include "devices/networkInterfaceCard.h"
 #include "devices/wire.h"
@@ -29,6 +30,11 @@ int main(int argc, char **argv) {
     module1.outgoingQueue = bufferQueue_create(8);
     module1.layer2Provider = &card1;
 
+    UDPModule udpModule1 = {0};
+    udpModule1.incomingQueue = bufferQueue_create(8);
+    udpModule1.outgoingQueue = bufferQueue_create(8);
+    udpModule1.layer3Provider = &module1;
+
     NetworkInterfaceCard card2 = {0};
     card2.outgoingQueue = bufferQueue_create(8);
     card2.incomingQueue = bufferQueue_create(8);
@@ -42,14 +48,14 @@ int main(int argc, char **argv) {
 
     // Set up initial traffic
 
-    IPQueueEventData queueEventData = {
-        .module=&module1
+    UDPQueueEventData queueEventData = {
+        .module=&udpModule1
     };
     queueEventData.data.data = malloc(9);
     memcpy(queueEventData.data.data, "tmp data", 9);
     queueEventData.data.dataSize = 9;
 
-    PostEvent(handleIPModuleQueueOutEvent, &queueEventData, sizeof(queueEventData), 0);
+    PostEvent(handleUDPModuleQueueOutEvent, &queueEventData, sizeof(queueEventData), 0);
 
     // Network Simulation
     while (eventQueue.numNodes > 0) {
