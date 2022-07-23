@@ -19,7 +19,6 @@ void handleLayer1Receive(EventData data) {
         .data=d->data
     };
 
-    printf("Injecting error\n");
     d->receiver->injectError(d->receiver, &(newData.data));
 
     PostEvent(handleNICQueueInEvent, &newData, sizeof(newData), 0);

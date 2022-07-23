@@ -6,8 +6,11 @@
 
 typedef u16 PortNumber;
 
+struct EchoClient;
+
 typedef struct UDPModule {
     IPModule *layer3Provider;
+    struct EchoClient *layer7Provider;
 
     BufferQueue outgoingQueue;
     BufferQueue incomingQueue;

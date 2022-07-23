@@ -1,5 +1,7 @@
 #include "devices/udpModule.h"
 
+#include "devices/echoClient.h"
+
 #include <assert.h>
 #include <stdio.h>
 
@@ -86,12 +88,12 @@ void handleUDPProcessInEvent(EventData data) {
 
     Buffer buff = bufferQueue_pop(&(module->incomingQueue));
 
-    printf("Got %d bytes\n", buff.dataSize);
-
-    // TODO: IP Header
-    printf("Data: %s\n", buff.data);
-
-    // TODO:Figure out where to send data
+    // Figure out where to send data
+    EchoClientEventData newEvent = {
+        .buffer=buff,
+        .client=module->layer7Provider
+    };
+    PostEvent(handleEchoClientReceive, &newEvent, sizeof(newEvent), 0);
 
     // Set is busy
     module->isBusy = true;

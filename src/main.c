@@ -6,6 +6,7 @@
 #include "devices/udpModule.h"
 #include "devices/ipModule.h"
 #include "devices/networkInterfaceCard.h"
+#include "devices/echoClient.h"
 #include "devices/wire.h"
 
 static u64 time;
@@ -39,6 +40,12 @@ int main(int argc, char **argv) {
 
     module1.layer4Provider = &udpModule1;
 
+    EchoClient echo1 = {0};
+    echo1.id = 1;
+    echo1.udp = &udpModule1;
+
+    udpModule1.layer7Provider = &echo1;
+
     NetworkInterfaceCard card2 = {0};
     card2.outgoingQueue = bufferQueue_create(8);
     card2.incomingQueue = bufferQueue_create(8);
@@ -59,6 +66,12 @@ int main(int argc, char **argv) {
 
     module2.layer4Provider = &udpModule2;
 
+    EchoClient echo2 = {0};
+    echo2.id = 2;
+    echo2.udp = &udpModule2;
+
+    udpModule2.layer7Provider = &echo2;
+
     u8 mac2[] = { 0x20, 0x20, 0x20, 0x20, 0x20, 0x20 };
     memcpy(card2.address, mac2, sizeof(MACAddress));
 
@@ -66,14 +79,7 @@ int main(int argc, char **argv) {
 
     // Set up initial traffic
 
-    UDPQueueEventData queueEventData = {
-        .module=&udpModule1
-    };
-    queueEventData.data.data = malloc(9);
-    memcpy(queueEventData.data.data, "tmp data", 9);
-    queueEventData.data.dataSize = 9;
-
-    PostEvent(handleUDPModuleQueueOutEvent, &queueEventData, sizeof(queueEventData), 0);
+    echoClient_send(&echo1, "This is a message");
 
     // Network Simulation
     while (eventQueue.numNodes > 0) {
