@@ -2,42 +2,54 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "physicalLayer.h"
 #include "event.h"
-#include "networkInterfaceCard.h"
+#include "devices/ipModule.h"
+#include "devices/networkInterfaceCard.h"
+#include "devices/wire.h"
 
 static u64 time;
 static EventQueue eventQueue;
 
 int main(int argc, char **argv) {
 
+    srand(5);
+
     // Configuration
-    NetworkInterfaceCard card1 = {
-        .outgoingQueue=bufferQueue_create(8),
-        .incomingQueue=bufferQueue_create(8),
-        .terminal.card=&card1,
-    };
+    NetworkInterfaceCard card1 = {0};
+    card1.outgoingQueue = bufferQueue_create(8);
+    card1.incomingQueue = bufferQueue_create(8);
+    card1.layer1Provider = stableWire_create();
+    card1.layer1Provider->card = &card1;
+
     u8 mac1[] = { 0x10, 0x10, 0x10, 0x10, 0x10, 0x10 };
     memcpy(card1.address, mac1, sizeof(MACAddress));
-    NetworkInterfaceCard card2 = {
-        .outgoingQueue=bufferQueue_create(8),
-        .incomingQueue=bufferQueue_create(8),
-        .terminal.card=&card2,
-    };
+
+    IPModule module1 = {0};
+    module1.incomingQueue = bufferQueue_create(8);
+    module1.outgoingQueue = bufferQueue_create(8);
+    module1.layer2Provider = &card1;
+
+    NetworkInterfaceCard card2 = {0};
+    card2.outgoingQueue = bufferQueue_create(8);
+    card2.incomingQueue = bufferQueue_create(8);
+    card2.layer1Provider = stableWire_create();
+    card2.layer1Provider->card = &card2;
+
     u8 mac2[] = { 0x20, 0x20, 0x20, 0x20, 0x20, 0x20 };
-    memcpy(card1.address, mac2, sizeof(MACAddress));
-    wireTerminal_connect(&(card1.terminal), &(card2.terminal));
+    memcpy(card2.address, mac2, sizeof(MACAddress));
+
+    layer1Provider_connect(card1.layer1Provider, card2.layer1Provider);
 
     // Set up initial traffic
 
-    NICQueueEventData queueEventData = {
-        .card=&card1,
+    IPQueueEventData queueEventData = {
+        .module=&module1
     };
     queueEventData.data.data = malloc(9);
     memcpy(queueEventData.data.data, "tmp data", 9);
     queueEventData.data.dataSize = 9;
 
-    PostEvent(handleNICQueueOutEvent, &queueEventData, sizeof(queueEventData), 0);
+    PostEvent(handleIPModuleQueueOutEvent, &queueEventData, sizeof(queueEventData), 0);
 
     // Network Simulation
     while (eventQueue.numNodes > 0) {

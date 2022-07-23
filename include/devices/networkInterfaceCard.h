@@ -4,7 +4,7 @@
 
 #include "event.h"
 #include "bufferQueue.h"
-#include "physicalLayer.h"
+#include "layers/layer1.h"
 
 // TODO: Should this really be a u64?
 typedef u8 MACAddress[6];
@@ -26,7 +26,7 @@ typedef struct NetworkInterfaceCard {
 
     MACAddress address;
 
-    WireTerminal terminal;
+    Layer1Provider *layer1Provider;
 
     // TODO: Should this be based on number of bytes?
     BufferQueue outgoingQueue;

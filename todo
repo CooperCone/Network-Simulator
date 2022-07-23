@@ -1,0 +1,33 @@
+# TODO
+
+- [ ] MVP
+  - [x] Layer1
+    - [x] reliable connections
+  - [x] Layer2
+    - [x] ethernet framing
+  - [ ] Layer3
+    - [x] ip interface
+    - [ ] ip header
+    - [ ] basic forwarding (no routing)
+  - [ ] Layer4
+    - [ ] udp interface
+    - [ ] udp header
+
+- [ ] Logging
+  - [ ] Logging at all layers?
+
+- [ ] Reliability
+  - [ ] Layer1
+    - [ ] single bit errors
+    - [ ] burst errors
+  - [ ] Layer2
+    - [ ] checksum
+    - [ ] crc
+  - [ ] Layer4
+    - [ ] checksum
+
+- [ ] Switches
+
+- [ ] Routers
+
+- [ ] TCP

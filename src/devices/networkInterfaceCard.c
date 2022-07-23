@@ -1,4 +1,4 @@
-#include "networkInterfaceCard.h"
+#include "devices/networkInterfaceCard.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -69,7 +69,7 @@ void handleNICProcessOutEvent(EventData data) {
         memset(ethHeader.preamble, EthPreambleStart, 7);
         memset(ethHeader.preamble + 7, EthPreambleEnd, 1);
 
-        memcpy(ethHeader.dstAddr, card->terminal.other->card->address, sizeof(MACAddress));
+        memcpy(ethHeader.dstAddr, card->layer1Provider->other->card->address, sizeof(MACAddress));
         memcpy(ethHeader.srcAddr, card->address, sizeof(MACAddress));
 
         memcpy(ethHeader.type, (u16*)&(buff.dataSize), 2);
@@ -87,10 +87,10 @@ void handleNICProcessOutEvent(EventData data) {
     memcpy(ethBuff.data + sizeof(EthernetHeader), buff.data, buff.dataSize);
 
     // Send buffer over wire
-    WireTerminalReceiveData receiveEventData = {0};
+    Layer1ReceiveData receiveEventData = {0};
     receiveEventData.data = ethBuff;
-    receiveEventData.receiver = card->terminal.other->card;
-    PostEvent(handleWireTerminalReceive, &receiveEventData, sizeof(receiveEventData), 0);
+    receiveEventData.receiver = card->layer1Provider->other;
+    PostEvent(handleLayer1Receive, &receiveEventData, sizeof(receiveEventData), 0);
 
     // Set is busy
     card->isBusy = true;
