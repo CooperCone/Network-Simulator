@@ -21,12 +21,16 @@ void handleLayer1Receive(EventData data) {
 
     d->receiver->injectError(d->receiver, &(newData.data));
 
+    // No delay because propagation and transmission delays are already accounted for?
+    // Should those actually be here?
     PostEvent(handleNICQueueInEvent, &newData, sizeof(newData), 0);
 }
 
-Layer1Provider *stableWire_create() {
+Layer1Provider *stableWire_create(u64 length, u64 bandwidth) {
     StableWire *wire = calloc(1, sizeof(StableWire));
 
+    wire->provider.length = length;
+    wire->provider.bandwidth = bandwidth;
     wire->provider.injectError = noError;
 
     return (Layer1Provider*)wire;

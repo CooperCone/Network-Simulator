@@ -1,8 +1,3 @@
-- Logging
-  - Logging at all layers?
-
-- Delay modelling
-
 - Device configuration
 
 - MVP
@@ -28,4 +23,16 @@
 
 - Routers
 
+- IP
+  - Forwarding
+  - Routing
+
 - TCP
+  - Handshake
+  - Reliability
+  - Congestion control
+  - Flow control
+
+- Logging
+  - All event logging
+  - 

@@ -3,6 +3,8 @@
 #include "devices/ipModule.h"
 
 #include "log.h"
+#include "timer.h"
+#include "util/math.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -27,6 +29,7 @@ void handleNICQueueOutEvent(EventData data) {
         NICProcessEventData processEvent = {
             .card=card
         };
+        // No delay because the card currently isn't busy
         PostEvent(handleNICProcessOutEvent, &processEvent, sizeof(processEvent), 0);
     }
 
@@ -38,21 +41,25 @@ void handleNICQueueInEvent(EventData data) {
     NetworkInterfaceCard *card = d->card;
     BufferQueue *queue = &(d->card->incomingQueue);
 
-    // If queue is full, drop traffic
-    if (queue->numBuffers == queue->maxBuffers) {
-        log(card->deviceID, "NIC: <- Queue Full, Dropping");
-        return;
-    }
+    Timer timer = timer_start();
+    {
+        // If queue is full, drop traffic
+        if (queue->numBuffers == queue->maxBuffers) {
+            log(card->deviceID, "NIC: <- Queue Full, Dropping");
+            return;
+        }
 
-    // Otherwise, add to queue and post a process event if
-    // NIC is not busy
-    bufferQueue_push(queue, d->data);
+        // Otherwise, add to queue and post a process event if
+        // NIC is not busy
+        bufferQueue_push(queue, d->data);
+    }
+    u64 time = timer_stop(timer);
 
     if (!card->isBusy) {
         NICProcessEventData processEvent = {
             .card=card
         };
-        PostEvent(handleNICProcessInEvent, &processEvent, sizeof(processEvent), 0);
+        PostEvent(handleNICProcessInEvent, &processEvent, sizeof(processEvent), time);
     }
 
     log(card->deviceID, "NIC: <- Queueing data");
@@ -62,6 +69,8 @@ void handleNICProcessOutEvent(EventData data) {
     // Check if we need to do an arp request
     NICProcessEventData *e = data;
     NetworkInterfaceCard *card = e->card;
+
+    Timer timer = timer_start();
 
     if (card->outgoingQueue.numBuffers == 0) {
         card->isBusy = false;
@@ -92,19 +101,23 @@ void handleNICProcessOutEvent(EventData data) {
     memcpy(ethBuff.data, &ethHeader, sizeof(EthernetHeader));
     memcpy(ethBuff.data + sizeof(EthernetHeader), buff.data, buff.dataSize);
 
+    u64 time = timer_stop(timer);
+
+    u64 propagationDelay = unitToNano(card->layer1Provider->other->length) / (u64)(0.8 * speedOfLight);
+    u64 transmissionDelay = unitToNano(ethBuff.dataSize * 8) / card->layer1Provider->other->bandwidth;
+
+    time += propagationDelay + transmissionDelay;
+
     // Send buffer over wire
     Layer1ReceiveData receiveEventData = {0};
     receiveEventData.data = ethBuff;
     receiveEventData.receiver = card->layer1Provider->other;
-    PostEvent(handleLayer1Receive, &receiveEventData, sizeof(receiveEventData), 0);
+    PostEvent(handleLayer1Receive, &receiveEventData, sizeof(receiveEventData), time);
 
     // Set is busy
     card->isBusy = true;
 
-    // Calculate the propagation and transmission delay
-    // and create new nic process out event
-
-    PostEvent(handleNICProcessOutEvent, e, sizeof(NICProcessEventData), 0);
+    PostEvent(handleNICProcessOutEvent, e, sizeof(NICProcessEventData), time);
 
     log(card->deviceID, "NIC: -> Sending Data");
 }
@@ -113,6 +126,8 @@ void handleNICProcessInEvent(EventData data) {
     // Check if we need to do an arp request
     NICProcessEventData *e = data;
     NetworkInterfaceCard *card = e->card;
+
+    Timer timer = timer_start();
 
     if (card->incomingQueue.numBuffers == 0) {
         card->isBusy = false;
@@ -132,19 +147,19 @@ void handleNICProcessInEvent(EventData data) {
 
     memcpy(newBuff.data, buff.data + sizeof(EthernetHeader), newBuff.dataSize);
 
+    u64 time = timer_stop(timer);
+
     // Figure out where to send data
     IPQueueEventData newEvent = {
         .data=newBuff,
         .module=card->layer3Provider
     };
-    PostEvent(handleIPModuleQueueInEvent, &newEvent, sizeof(newEvent), 0);
+    PostEvent(handleIPModuleQueueInEvent, &newEvent, sizeof(newEvent), time);
 
     // Set is busy
     card->isBusy = true;
 
-    // Calculate the propagation and transmission delay
-    // and create new nic process out event
-    PostEvent(handleNICProcessInEvent, e, sizeof(NICProcessEventData), 0);
+    PostEvent(handleNICProcessInEvent, e, sizeof(NICProcessEventData), time);
 
     log(card->deviceID, "NIC: <- Received Data, Forwarding Up");
 }

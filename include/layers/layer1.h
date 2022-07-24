@@ -12,6 +12,9 @@ typedef void (*InjectError)(struct Layer1Provider *provider, Buffer *data);
 typedef struct Layer1Provider {
     InjectError injectError;
 
+    u64 length;
+    u64 bandwidth; // bits per second
+
     struct Layer1Provider *other;
     // Info like length, bytes per second, etc
 

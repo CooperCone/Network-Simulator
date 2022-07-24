@@ -3,6 +3,8 @@
 #include <string.h>
 
 #include "event.h"
+#include "timer.h"
+#include "util/math.h"
 #include "devices/udpModule.h"
 #include "devices/ipModule.h"
 #include "devices/networkInterfaceCard.h"
@@ -16,12 +18,14 @@ int main(int argc, char **argv) {
 
     srand(5);
 
+    timer_init();
+
     // Configuration
     NetworkInterfaceCard card1 = {0};
     card1.deviceID = 1;
     card1.outgoingQueue = bufferQueue_create(8);
     card1.incomingQueue = bufferQueue_create(8);
-    card1.layer1Provider = stableWire_create();
+    card1.layer1Provider = stableWire_create(3, megaToUnit(300));
     card1.layer1Provider->card = &card1;
 
     u8 mac1[] = { 0x10, 0x10, 0x10, 0x10, 0x10, 0x10 };
@@ -53,7 +57,7 @@ int main(int argc, char **argv) {
     card2.deviceID = 2;
     card2.outgoingQueue = bufferQueue_create(8);
     card2.incomingQueue = bufferQueue_create(8);
-    card2.layer1Provider = stableWire_create();
+    card2.layer1Provider = stableWire_create(3, megaToUnit(300));
     card2.layer1Provider->card = &card2;
 
     IPModule module2 = {0};
