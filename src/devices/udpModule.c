@@ -7,6 +7,8 @@
 
 #include <assert.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 void handleUDPModuleQueueOutEvent(EventData data) {
     UDPQueueEventData *d = data;
@@ -80,14 +82,26 @@ void handleUDPProcessOutEvent(EventData data) {
 
     Buffer buff = bufferQueue_pop(&(module->outgoingQueue));
 
-    // TODO: Fill IP header
+    // Fill UDP Header
+    UDPHeader header = {0};
+    header.srcPort = 0; // TODO: Fill these
+    header.dstPort = 0; // TODO: Fill these
+    header.length = (u16)sizeof(UDPHeader) + (u16)buff.dataSize;
+    header.checksum = 0;
+
+    Buffer newBuff = {
+        .dataSize=header.length,
+        .data=calloc(header.length, 1)
+    };
+    memcpy(newBuff.data, &header, sizeof(UDPHeader));
+    memcpy(newBuff.data + sizeof(UDPHeader), buff.data, buff.dataSize);
 
     u64 time = timer_stop(timer);
 
     // Send buffer over wire
     IPQueueEventData eventData = {
         .module=module->layer3Provider,
-        .data=buff
+        .data=newBuff
     };
     PostEvent(handleIPModuleQueueOutEvent, &eventData, sizeof(eventData), time);
 
@@ -113,11 +127,20 @@ void handleUDPProcessInEvent(EventData data) {
 
     Buffer buff = bufferQueue_pop(&(module->incomingQueue));
 
+    // Strip Header
+    UDPHeader *header = (UDPHeader*)buff.data;
+
+    Buffer newBuff = {
+        .dataSize=header->length - sizeof(UDPHeader),
+        .data=calloc(header->length - sizeof(UDPHeader), 1)
+    };
+    memcpy(newBuff.data, buff.data + sizeof(UDPHeader), newBuff.dataSize);
+
     u64 time = timer_stop(timer);
 
     // Figure out where to send data
     EchoClientEventData newEvent = {
-        .buffer=buff,
+        .buffer=newBuff,
         .client=module->layer7Provider
     };
     PostEvent(handleEchoClientReceive, &newEvent, sizeof(newEvent), time);

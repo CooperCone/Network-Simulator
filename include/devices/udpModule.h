@@ -8,6 +8,15 @@ typedef u16 PortNumber;
 
 struct EchoClient;
 
+#pragma pack(push)
+typedef struct {
+    PortNumber srcPort;
+    PortNumber dstPort;
+    u16 length;
+    u16 checksum;
+} UDPHeader;
+#pragma pack(pop)
+
 typedef struct UDPModule {
     u64 deviceID;
 
