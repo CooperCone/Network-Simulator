@@ -7,6 +7,8 @@
 
 #include <assert.h>
 #include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 
 void handleIPModuleQueueOutEvent(EventData data) {
     IPQueueEventData *d = data;
@@ -79,14 +81,30 @@ void handleIPProcessOutEvent(EventData data) {
 
     Buffer buff = bufferQueue_pop(&(module->outgoingQueue));
 
-    // TODO: Fill IP header
+    // Set IP Header
+    IPHeader header = {0};
+    header.version = 4;
+    header.headerLength = 5;
+    header.datagramLength = (u16)sizeof(IPHeader) + (u16)buff.dataSize;
+    header.timeToLive = 255;
+    header.upperLayerProtocol = 0; // TODO: Set this based on the upper protocol
+    header.checksum = 0; // TODO: Do the checksum
+    memcpy(header.srcIPAddr, module->address, sizeof(IPAddress));
+    // TODO: Destination ip address
+
+    Buffer newBuff = {
+        .dataSize=header.datagramLength,
+        .data=calloc(header.datagramLength, 1)
+    };
+    memcpy(newBuff.data, &header, sizeof(IPHeader));
+    memcpy(newBuff.data + sizeof(IPHeader), buff.data, buff.dataSize);
 
     u64 time = timer_stop(timer);
 
     // Send buffer over wire
     NICQueueEventData eventData = {
         .card=module->layer2Provider,
-        .data=buff
+        .data=newBuff
     };
     PostEvent(handleNICQueueOutEvent, &eventData, sizeof(eventData), time);
 
@@ -112,11 +130,20 @@ void handleIPProcessInEvent(EventData data) {
 
     Buffer buff = bufferQueue_pop(&(module->incomingQueue));
 
+    // Strip IP Header
+    IPHeader *header = (IPHeader*)buff.data;
+
+    Buffer newBuff = {
+        .dataSize=header->datagramLength - sizeof(IPHeader),
+        .data=calloc(header->datagramLength - sizeof(IPHeader), 1)
+    };
+    memcpy(newBuff.data, buff.data + sizeof(IPHeader), newBuff.dataSize);
+
     u64 time = timer_stop(timer);
 
     // Figure out where to send data
     UDPQueueEventData newEvent = {
-        .data=buff,
+        .data=newBuff,
         .module=module->layer4Provider
     };
     PostEvent(handleUDPModuleQueueInEvent, &newEvent, sizeof(newEvent), time);
