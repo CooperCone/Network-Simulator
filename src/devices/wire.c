@@ -5,27 +5,6 @@
 
 #include "devices/networkInterfaceCard.h"
 
-void layer1Provider_connect(Layer1Provider *provider1, Layer1Provider *provider2) {
-    provider1->other = provider2;
-    provider2->other = provider1;
-}
-
-void handleLayer1Receive(EventData data) {
-    // Send card to incoming queue
-    Layer1ReceiveData *d = data;
-
-    NICQueueEventData newData = {
-        .card=d->receiver->card,
-        .data=d->data
-    };
-
-    d->receiver->injectError(d->receiver, &(newData.data));
-
-    // No delay because propagation and transmission delays are already accounted for?
-    // Should those actually be here?
-    PostEvent(handleNICQueueInEvent, &newData, sizeof(newData), 0);
-}
-
 Layer1Provider *stableWire_create(u64 length, u64 bandwidth) {
     StableWire *wire = calloc(1, sizeof(StableWire));
 

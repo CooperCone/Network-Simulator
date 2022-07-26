@@ -1,14 +1,14 @@
 #pragma once
 
-#include "devices/networkInterfaceCard.h"
+#include "layers/forward.h"
+
+#include "event.h"
 #include "bufferQueue.h"
 #include "util/types.h"
 
 #include <stdbool.h>
 
 typedef u8 IPAddress[4];
-
-struct UDPModule;
 
 #pragma pack(push)
 typedef struct {
@@ -35,7 +35,7 @@ typedef struct IPModule {
     u64 deviceID;
 
     IPAddress address;
-    NetworkInterfaceCard *layer2Provider;
+    struct Layer2Provider *layer2Provider;
     struct UDPModule *layer4Provider;
 
     BufferQueue outgoingQueue;

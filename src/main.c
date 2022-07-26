@@ -25,8 +25,10 @@ int main(int argc, char **argv) {
     card1.deviceID = 1;
     card1.outgoingQueue = bufferQueue_create(8);
     card1.incomingQueue = bufferQueue_create(8);
-    card1.layer1Provider = singleBitErrorWire_create(0.99, 3, megaToUnit(300));
-    card1.layer1Provider->card = &card1;
+    card1.provider.layer1Provider = stableWire_create(3, megaToUnit(300));
+    card1.provider.layer1Provider->layer2Provider = &(card1.provider);
+    card1.provider.onReceiveBuffer = handleNICQueueInEvent;
+    card1.provider.onSendBuffer = handleNICQueueOutEvent;
 
     u8 mac1[] = { 0x10, 0x10, 0x10, 0x10, 0x10, 0x10 };
     memcpy(card1.address, mac1, sizeof(MACAddress));
@@ -35,9 +37,9 @@ int main(int argc, char **argv) {
     module1.deviceID = 1;
     module1.incomingQueue = bufferQueue_create(8);
     module1.outgoingQueue = bufferQueue_create(8);
-    module1.layer2Provider = &card1;
+    module1.layer2Provider = &(card1.provider);
 
-    card1.layer3Provider = &module1;
+    card1.provider.layer3Provider = &module1;
 
     UDPModule udpModule1 = {0};
     udpModule1.deviceID = 1;
@@ -57,16 +59,19 @@ int main(int argc, char **argv) {
     card2.deviceID = 2;
     card2.outgoingQueue = bufferQueue_create(8);
     card2.incomingQueue = bufferQueue_create(8);
-    card2.layer1Provider = singleBitErrorWire_create(0.99, 3, megaToUnit(300));
-    card2.layer1Provider->card = &card2;
+    card2.provider.layer1Provider = stableWire_create(3, megaToUnit(300));
+    card2.provider.layer1Provider->layer2Provider = &(card2.provider);
+    card2.provider.onReceiveBuffer = handleNICQueueInEvent;
+    card2.provider.onSendBuffer = handleNICQueueOutEvent;
+
 
     IPModule module2 = {0};
     module2.deviceID = 2;
     module2.incomingQueue = bufferQueue_create(8);
     module2.outgoingQueue = bufferQueue_create(8);
-    module2.layer2Provider = &card2;
+    module2.layer2Provider = &(card2.provider);
 
-    card2.layer3Provider = &module2;
+    card2.provider.layer3Provider = &module2;
 
     UDPModule udpModule2 = {0};
     udpModule2.deviceID = 2;
@@ -85,7 +90,7 @@ int main(int argc, char **argv) {
     u8 mac2[] = { 0x20, 0x20, 0x20, 0x20, 0x20, 0x20 };
     memcpy(card2.address, mac2, sizeof(MACAddress));
 
-    layer1Provider_connect(card1.layer1Provider, card2.layer1Provider);
+    layer1Provider_connect(card1.provider.layer1Provider, card2.provider.layer1Provider);
 
     // Set up initial traffic
 

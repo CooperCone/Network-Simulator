@@ -11,9 +11,9 @@
 #include <string.h>
 
 void handleNICQueueOutEvent(EventData data) {
-    NICQueueEventData *d = data;
-    NetworkInterfaceCard *card = d->card;
-    BufferQueue *queue = &(d->card->outgoingQueue);
+    Layer2InEventData *d = data;
+    NetworkInterfaceCard *card = (NetworkInterfaceCard*)d->provider;
+    BufferQueue *queue = &(card->outgoingQueue);
 
     // If queue full, drop traffic
     if (queue->numBuffers == queue->maxBuffers) {
@@ -37,9 +37,9 @@ void handleNICQueueOutEvent(EventData data) {
 }
 
 void handleNICQueueInEvent(EventData data) {
-    NICQueueEventData *d = data;
-    NetworkInterfaceCard *card = d->card;
-    BufferQueue *queue = &(d->card->incomingQueue);
+    Layer2InEventData *d = data;
+    NetworkInterfaceCard *card = (NetworkInterfaceCard*)d->provider;
+    BufferQueue *queue = &(card->incomingQueue);
 
     Timer timer = timer_start();
     {
@@ -84,7 +84,8 @@ void handleNICProcessOutEvent(EventData data) {
         memset(ethHeader.preamble, EthPreambleStart, 7);
         memset(ethHeader.preamble + 7, EthPreambleEnd, 1);
 
-        memcpy(ethHeader.dstAddr, card->layer1Provider->other->card->address, sizeof(MACAddress));
+        // TODO: Be able to specify the destination mac address
+        // memcpy(ethHeader.dstAddr, card->provider.layer1Provider->other->layer2Provider->address, sizeof(MACAddress));
         memcpy(ethHeader.srcAddr, card->address, sizeof(MACAddress));
 
         memcpy(ethHeader.type, (u16*)&(buff.dataSize), 2);
@@ -105,15 +106,15 @@ void handleNICProcessOutEvent(EventData data) {
 
     u64 time = timer_stop(timer);
 
-    u64 propagationDelay = unitToNano(card->layer1Provider->other->length) / (u64)(0.8 * speedOfLight);
-    u64 transmissionDelay = unitToNano(ethBuff.dataSize * 8) / card->layer1Provider->other->bandwidth;
+    u64 propagationDelay = unitToNano(card->provider.layer1Provider->other->length) / (u64)(0.8 * speedOfLight);
+    u64 transmissionDelay = unitToNano(ethBuff.dataSize * 8) / card->provider.layer1Provider->other->bandwidth;
 
     time += propagationDelay + transmissionDelay;
 
     // Send buffer over wire
     Layer1ReceiveData receiveEventData = {0};
     receiveEventData.data = ethBuff;
-    receiveEventData.receiver = card->layer1Provider->other;
+    receiveEventData.receiver = card->provider.layer1Provider->other;
     PostEvent(handleLayer1Receive, &receiveEventData, sizeof(receiveEventData), time);
 
     // Set is busy
@@ -168,7 +169,7 @@ void handleNICProcessInEvent(EventData data) {
     // Figure out where to send data
     IPQueueEventData newEvent = {
         .data=newBuff,
-        .module=card->layer3Provider
+        .module=card->provider.layer3Provider
     };
     PostEvent(handleIPModuleQueueInEvent, &newEvent, sizeof(newEvent), time);
 

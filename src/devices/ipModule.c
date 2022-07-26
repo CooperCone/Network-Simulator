@@ -1,10 +1,12 @@
 #include "devices/ipModule.h"
 
 #include "devices/udpModule.h"
+#include "layers/layer2.h"
 
 #include "log.h"
 #include "timer.h"
 #include "util/math.h"
+#include "event.h"
 
 #include <assert.h>
 #include <stdio.h>
@@ -106,11 +108,11 @@ void handleIPProcessOutEvent(EventData data) {
     u64 time = timer_stop(timer);
 
     // Send buffer over wire
-    NICQueueEventData eventData = {
-        .card=module->layer2Provider,
+    Layer2InEventData eventData = {
+        .provider=module->layer2Provider,
         .data=newBuff
     };
-    PostEvent(handleNICQueueOutEvent, &eventData, sizeof(eventData), time);
+    PostEvent(module->layer2Provider->onSendBuffer, &eventData, sizeof(eventData), time);
 
     // Set is busy
     module->isBusy = true;
