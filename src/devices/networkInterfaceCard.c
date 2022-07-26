@@ -90,16 +90,18 @@ void handleNICProcessOutEvent(EventData data) {
         memcpy(ethHeader.type, (u16*)&(buff.dataSize), 2);
     }
 
-    // TODO: CRC
-
     // Copy header, data, and crc
     Buffer ethBuff = {
-        .dataSize=buff.dataSize + sizeof(EthernetHeader),
+        .dataSize=buff.dataSize + sizeof(EthernetHeader) + 4,
     };
-    ethBuff.data = malloc(ethBuff.dataSize);
+    ethBuff.data = calloc(ethBuff.dataSize, 1);
 
     memcpy(ethBuff.data, &ethHeader, sizeof(EthernetHeader));
     memcpy(ethBuff.data + sizeof(EthernetHeader), buff.data, buff.dataSize);
+
+    // Checksum
+    u32 checksum = buffer_checksum32(ethBuff);
+    memcpy(ethBuff.data + buff.dataSize + sizeof(EthernetHeader), &checksum, sizeof(checksum));
 
     u64 time = timer_stop(timer);
 
@@ -136,12 +138,26 @@ void handleNICProcessInEvent(EventData data) {
 
     Buffer buff = bufferQueue_pop(&(card->incomingQueue));
 
+    // Verify checksum
+    u32 checksum;
+    memcpy(&checksum, buff.data + buff.dataSize - 4, 4);
+
+    memset(buff.data + buff.dataSize - 4, 0, 4);
+
+    u32 calcChecksum = buffer_checksum32(buff);
+
+    if (calcChecksum != checksum) {
+        // Drop packet because checksums didnt match
+        log(card->deviceID, "NIC: <- Invalid Checksum, Dropping Packet");
+        return;
+    }
+
     // Unwrap ethernet header
     EthernetHeader header = {0};
     memcpy(&header, buff.data, sizeof(EthernetHeader));
 
     Buffer newBuff = {
-        .dataSize=buff.dataSize - sizeof(EthernetHeader),
+        .dataSize=buff.dataSize - sizeof(EthernetHeader) - 4,
     };
     newBuff.data = malloc(newBuff.dataSize);
 

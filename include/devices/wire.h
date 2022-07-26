@@ -15,5 +15,5 @@ typedef struct {
     f64 errorRate;
 } SingleBitErrorWire;
 
-Layer1Provider *singleBitErrorWire_create(f64 errorRate);
+Layer1Provider *singleBitErrorWire_create(f64 errorRate, u64 length, u64 bandwidth);
 void singleBitError(Layer1Provider *provider, Buffer *data);

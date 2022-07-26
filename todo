@@ -1,10 +1,6 @@
+- Better data injected into log messages
+
 - Reliability
-  - Layer1
-    - single bit errors
-    - burst errors
-  - Layer2
-    - checksum
-    - crc
   - Layer4
     - checksum
 

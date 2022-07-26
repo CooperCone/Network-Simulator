@@ -40,11 +40,13 @@ void noError(Layer1Provider *provider, Buffer *data) {
     // Do nothing
 }
 
-Layer1Provider *singleBitErrorWire_create(f64 errorRate) {
-    SingleBitErrorWire *wire = calloc(1, sizeof(StableWire));
+Layer1Provider *singleBitErrorWire_create(f64 errorRate, u64 length, u64 bandwidth) {
+    SingleBitErrorWire *wire = calloc(1, sizeof(SingleBitErrorWire));
 
     wire->errorRate = errorRate;
     wire->provider.injectError = singleBitError;
+    wire->provider.length = length;
+    wire->provider.bandwidth = bandwidth;
 
     return (Layer1Provider*)wire;
 }

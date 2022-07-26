@@ -38,9 +38,7 @@ typedef struct NetworkInterfaceCard {
     BufferQueue outgoingQueue;
     BufferQueue incomingQueue;
 
-    // Wire Terminal
     // Arp Module
-    // Layer 2 implementation
 } NetworkInterfaceCard;
 
 typedef struct {
