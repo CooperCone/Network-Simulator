@@ -1,6 +1,13 @@
 - Better data injected into log messages
 
+- Interfaces
+  - Layer2 interface
+  - Layer3 interface
+  - Layer4 interface
+
 - Reliability
+  - Layer3
+    - header checksum
   - Layer4
     - checksum
 
@@ -15,6 +22,9 @@
 - Routers
 
 - Layer Interfaces
+
+- Event system logging
+  - Event toString?
 
 - IP
   - Forwarding

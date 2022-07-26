@@ -25,7 +25,7 @@ int main(int argc, char **argv) {
     card1.deviceID = 1;
     card1.outgoingQueue = bufferQueue_create(8);
     card1.incomingQueue = bufferQueue_create(8);
-    card1.layer1Provider = singleBitErrorWire_create(0.99995, 3, megaToUnit(300));
+    card1.layer1Provider = singleBitErrorWire_create(0.99, 3, megaToUnit(300));
     card1.layer1Provider->card = &card1;
 
     u8 mac1[] = { 0x10, 0x10, 0x10, 0x10, 0x10, 0x10 };
@@ -57,7 +57,7 @@ int main(int argc, char **argv) {
     card2.deviceID = 2;
     card2.outgoingQueue = bufferQueue_create(8);
     card2.incomingQueue = bufferQueue_create(8);
-    card2.layer1Provider = singleBitErrorWire_create(0.99995, 3, megaToUnit(300));
+    card2.layer1Provider = singleBitErrorWire_create(0.99, 3, megaToUnit(300));
     card2.layer1Provider->card = &card2;
 
     IPModule module2 = {0};

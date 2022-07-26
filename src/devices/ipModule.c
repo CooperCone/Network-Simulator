@@ -4,6 +4,7 @@
 
 #include "log.h"
 #include "timer.h"
+#include "util/math.h"
 
 #include <assert.h>
 #include <stdio.h>
@@ -88,9 +89,12 @@ void handleIPProcessOutEvent(EventData data) {
     header.datagramLength = (u16)sizeof(IPHeader) + (u16)buff.dataSize;
     header.timeToLive = 255;
     header.upperLayerProtocol = 0; // TODO: Set this based on the upper protocol
-    header.checksum = 0; // TODO: Do the checksum
+    header.checksum = 0;
     memcpy(header.srcIPAddr, module->address, sizeof(IPAddress));
     // TODO: Destination ip address
+
+    // IP Header Checksum
+    header.checksum = internetChecksum((u16*)&header, sizeof(header) / 2);
 
     Buffer newBuff = {
         .dataSize=header.datagramLength,
@@ -132,6 +136,14 @@ void handleIPProcessInEvent(EventData data) {
 
     // Strip IP Header
     IPHeader *header = (IPHeader*)buff.data;
+
+    // Verify Checksum
+    u16 checksum = header->checksum;
+    header->checksum = 0;
+    u16 checksumComplement = internetChecksumComplement((u16*)header, sizeof(IPHeader) / 2);
+    if (checksumComplement + checksum != 0xFFFF) {
+        printf("Invalid IP Checksum!!!\n");
+    }
 
     Buffer newBuff = {
         .dataSize=header->datagramLength - sizeof(IPHeader),
