@@ -99,16 +99,16 @@ void handleUDPProcessOutEvent(EventData data) {
     u64 time = timer_stop(timer);
 
     // Send buffer over wire
-    IPQueueEventData eventData = {
+    Layer3InEventData eventData = {
         .module=module->layer3Provider,
         .data=newBuff
     };
-    PostEvent(handleIPModuleQueueOutEvent, &eventData, sizeof(eventData), time);
+    PostEvent(module->layer3Provider->onSendBuffer, &eventData, sizeof(eventData), time);
 
     // Set is busy
     module->isBusy = true;
 
-    PostEvent(handleUDPProcessOutEvent, e, sizeof(IPProcessEventData), time);
+    PostEvent(handleUDPProcessOutEvent, e, sizeof(UDPProcessEventData), time);
 
     log(module->deviceID, "UDP: -> Sending Data");
 }

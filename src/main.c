@@ -37,17 +37,19 @@ int main(int argc, char **argv) {
     module1.deviceID = 1;
     module1.incomingQueue = bufferQueue_create(8);
     module1.outgoingQueue = bufferQueue_create(8);
-    module1.layer2Provider = &(card1.provider);
+    module1.provider.layer2Provider = &(card1.provider);
+    module1.provider.onReceiveBuffer = handleIPModuleQueueInEvent;
+    module1.provider.onSendBuffer = handleIPModuleQueueOutEvent;
 
-    card1.provider.layer3Provider = &module1;
+    card1.provider.layer3Provider = &(module1.provider);
 
     UDPModule udpModule1 = {0};
     udpModule1.deviceID = 1;
     udpModule1.incomingQueue = bufferQueue_create(8);
     udpModule1.outgoingQueue = bufferQueue_create(8);
-    udpModule1.layer3Provider = &module1;
+    udpModule1.layer3Provider = &(module1.provider);
 
-    module1.layer4Provider = &udpModule1;
+    module1.provider.layer4Provider = &udpModule1;
 
     EchoClient echo1 = {0};
     echo1.id = 1;
@@ -64,22 +66,23 @@ int main(int argc, char **argv) {
     card2.provider.onReceiveBuffer = handleNICQueueInEvent;
     card2.provider.onSendBuffer = handleNICQueueOutEvent;
 
-
     IPModule module2 = {0};
     module2.deviceID = 2;
     module2.incomingQueue = bufferQueue_create(8);
     module2.outgoingQueue = bufferQueue_create(8);
-    module2.layer2Provider = &(card2.provider);
+    module2.provider.layer2Provider = &(card2.provider);
+    module2.provider.onReceiveBuffer = handleIPModuleQueueInEvent;
+    module2.provider.onSendBuffer = handleIPModuleQueueOutEvent;
 
-    card2.provider.layer3Provider = &module2;
+    card2.provider.layer3Provider = &(module2.provider);
 
     UDPModule udpModule2 = {0};
     udpModule2.deviceID = 2;
     udpModule2.incomingQueue = bufferQueue_create(8);
     udpModule2.outgoingQueue = bufferQueue_create(8);
-    udpModule2.layer3Provider = &module2;
+    udpModule2.layer3Provider = &(module2.provider);
 
-    module2.layer4Provider = &udpModule2;
+    module2.provider.layer4Provider = &udpModule2;
 
     EchoClient echo2 = {0};
     echo2.id = 2;

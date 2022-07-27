@@ -1,14 +1,12 @@
 #pragma once
 
-#include "layers/forward.h"
+#include "layers/layer3.h"
 
 #include "event.h"
 #include "bufferQueue.h"
 #include "util/types.h"
 
 #include <stdbool.h>
-
-typedef u8 IPAddress[4];
 
 #pragma pack(push)
 typedef struct {
@@ -32,11 +30,11 @@ typedef struct {
 #pragma pack(pop)
 
 typedef struct IPModule {
+    Layer3Provider provider;
+
     u64 deviceID;
 
     IPAddress address;
-    struct Layer2Provider *layer2Provider;
-    struct UDPModule *layer4Provider;
 
     BufferQueue outgoingQueue;
     BufferQueue incomingQueue;
@@ -44,10 +42,6 @@ typedef struct IPModule {
     bool isBusy;
 } IPModule;
 
-typedef struct {
-    IPModule *module;
-    Buffer data;
-} IPQueueEventData;
 
 void handleIPModuleQueueOutEvent(EventData data);
 void handleIPModuleQueueInEvent(EventData data);

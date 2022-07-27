@@ -19,7 +19,7 @@ typedef struct {
 
 typedef struct Layer2Provider {
     struct Layer1Provider *layer1Provider;
-    struct IPModule *layer3Provider;
+    struct Layer3Provider *layer3Provider;
 
     HandleEvent onReceiveBuffer;
     HandleEvent onSendBuffer;

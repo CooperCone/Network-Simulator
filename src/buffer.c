@@ -1,5 +1,7 @@
 #include "buffer.h"
 
+#include <stdio.h>
+
 u16 buffer_checksum16(Buffer buff) {
     u16 val = 0;
 

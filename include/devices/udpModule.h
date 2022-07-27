@@ -1,6 +1,7 @@
 #pragma once
 
-#include "devices/ipModule.h"
+#include "layers/layer3.h"
+
 #include "bufferQueue.h"
 #include "util/types.h"
 
@@ -20,7 +21,7 @@ typedef struct {
 typedef struct UDPModule {
     u64 deviceID;
 
-    IPModule *layer3Provider;
+    Layer3Provider *layer3Provider;
     struct EchoClient *layer7Provider;
 
     BufferQueue outgoingQueue;

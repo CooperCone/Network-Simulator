@@ -14,9 +14,9 @@
 #include <stdlib.h>
 
 void handleIPModuleQueueOutEvent(EventData data) {
-    IPQueueEventData *d = data;
-    IPModule *module = d->module;
-    BufferQueue *queue = &(d->module->outgoingQueue);
+    Layer3InEventData *d = data;
+    IPModule *module = (IPModule*)d->module;
+    BufferQueue *queue = &(module->outgoingQueue);
 
     Timer timer = timer_start();
 
@@ -42,9 +42,9 @@ void handleIPModuleQueueOutEvent(EventData data) {
 }
 
 void handleIPModuleQueueInEvent(EventData data) {
-    IPQueueEventData *d = data;
-    IPModule *module = d->module;
-    BufferQueue *queue = &(d->module->incomingQueue);
+    Layer3InEventData *d = data;
+    IPModule *module = (IPModule*)d->module;
+    BufferQueue *queue = &(module->incomingQueue);
 
     Timer timer = timer_start();
 
@@ -109,10 +109,11 @@ void handleIPProcessOutEvent(EventData data) {
 
     // Send buffer over wire
     Layer2InEventData eventData = {
-        .provider=module->layer2Provider,
+        .provider=module->provider.layer2Provider,
         .data=newBuff
     };
-    PostEvent(module->layer2Provider->onSendBuffer, &eventData, sizeof(eventData), time);
+
+    PostEvent(module->provider.layer2Provider->onSendBuffer, &eventData, sizeof(eventData), time);
 
     // Set is busy
     module->isBusy = true;
@@ -145,6 +146,7 @@ void handleIPProcessInEvent(EventData data) {
     u16 checksumComplement = internetChecksumComplement((u16*)header, sizeof(IPHeader) / 2);
     if (checksumComplement + checksum != 0xFFFF) {
         printf("Invalid IP Checksum!!!\n");
+        return;
     }
 
     Buffer newBuff = {
@@ -158,7 +160,7 @@ void handleIPProcessInEvent(EventData data) {
     // Figure out where to send data
     UDPQueueEventData newEvent = {
         .data=newBuff,
-        .module=module->layer4Provider
+        .module=module->provider.layer4Provider
     };
     PostEvent(handleUDPModuleQueueInEvent, &newEvent, sizeof(newEvent), time);
 

@@ -2,5 +2,5 @@
 
 struct Layer1Provider;
 struct Layer2Provider;
-struct IPModule;
+struct Layer3Provider;
 struct UDPModule;

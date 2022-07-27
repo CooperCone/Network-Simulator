@@ -1,6 +1,7 @@
 #include "devices/networkInterfaceCard.h"
 
 #include "devices/ipModule.h"
+#include "devices/udpModule.h"
 
 #include "log.h"
 #include "timer.h"
@@ -140,7 +141,7 @@ void handleNICProcessInEvent(EventData data) {
     Buffer buff = bufferQueue_pop(&(card->incomingQueue));
 
     // Verify checksum
-    u32 checksum;
+    u32 checksum = 0;
     memcpy(&checksum, buff.data + buff.dataSize - 4, 4);
 
     memset(buff.data + buff.dataSize - 4, 0, 4);
@@ -167,11 +168,11 @@ void handleNICProcessInEvent(EventData data) {
     u64 time = timer_stop(timer);
 
     // Figure out where to send data
-    IPQueueEventData newEvent = {
+    Layer3InEventData newEvent = {
         .data=newBuff,
         .module=card->provider.layer3Provider
     };
-    PostEvent(handleIPModuleQueueInEvent, &newEvent, sizeof(newEvent), time);
+    PostEvent(card->provider.layer3Provider->onReceiveBuffer, &newEvent, sizeof(newEvent), time);
 
     // Set is busy
     card->isBusy = true;

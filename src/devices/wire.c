@@ -36,6 +36,8 @@ void singleBitError(Layer1Provider *provider, Buffer *data) {
     // TODO: Do this stuff
     for (u64 i = 0; i < data->dataSize * 8; i++) {
         if ((double)rand() / (double)RAND_MAX > wire->errorRate) {
+            printf("Injecting error\n");
+
             u64 byteNumber = i / 8;
             u64 bitNumber = i % 8;
 

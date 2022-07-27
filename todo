@@ -1,9 +1,12 @@
 - Better data injected into log messages
 
 - Interfaces
-  - Layer2 interface
   - Layer3 interface
   - Layer4 interface
+  - Overall cleanup
+    - make sure no devices in layers
+    - make sure no layers included between them
+    - all include forward.h
 
 - Reliability
   - Layer3
