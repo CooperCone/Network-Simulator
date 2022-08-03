@@ -36,7 +36,7 @@ void handleIPModuleQueueOutEvent(EventData data) {
         IPProcessEventData processEvent = {
             .module=module
         };
-        PostEvent(handleIPProcessOutEvent, &processEvent, sizeof(processEvent), time);
+    PostEvent(module->deviceID, GetFuncs(handleIPProcessOutEvent), &processEvent, sizeof(processEvent), time);
     }
     log(module->deviceID, "IP: -> Queueing Data");
 }
@@ -64,7 +64,7 @@ void handleIPModuleQueueInEvent(EventData data) {
         IPProcessEventData processEvent = {
             .module=module
         };
-        PostEvent(handleIPProcessInEvent, &processEvent, sizeof(processEvent), time);
+        PostEvent(module->deviceID, GetFuncs(handleIPProcessInEvent), &processEvent, sizeof(processEvent), time);
     }
 
     log(module->deviceID, "IP: <- Queueing Data");
@@ -113,12 +113,12 @@ void handleIPProcessOutEvent(EventData data) {
         .data=newBuff
     };
 
-    PostEvent(module->provider.layer2Provider->onSendBuffer, &eventData, sizeof(eventData), time);
+    PostEvent(module->deviceID, module->provider.layer2Provider->onSendBuffer, &eventData, sizeof(eventData), time);
 
     // Set is busy
     module->isBusy = true;
 
-    PostEvent(handleIPProcessOutEvent, e, sizeof(IPProcessEventData), time);
+    PostEvent(module->deviceID, GetFuncs(handleIPProcessOutEvent), e, sizeof(IPProcessEventData), time);
 
     log(module->deviceID, "IP: -> Sending Data");
 }
@@ -146,7 +146,7 @@ void handleIPProcessInEvent(EventData data) {
     u16 checksumComplement = internetChecksumComplement((u16*)header, sizeof(IPHeader) / 2);
     if (checksumComplement + checksum != 0xFFFF) {
         printf("Invalid IP Checksum!!!\n");
-        return;
+    return;
     }
 
     Buffer newBuff = {
@@ -158,18 +158,18 @@ void handleIPProcessInEvent(EventData data) {
     u64 time = timer_stop(timer);
 
     // Figure out where to send data
-    UDPQueueEventData newEvent = {
+    Layer4InEventData newEvent = {
         .data=newBuff,
-        .module=module->provider.layer4Provider
+        .layer4=module->provider.layer4Provider
     };
-    PostEvent(handleUDPModuleQueueInEvent, &newEvent, sizeof(newEvent), time);
+    PostEvent(module->deviceID, module->provider.layer4Provider->onReceiveBuffer, &newEvent, sizeof(newEvent), time);
 
     // Set is busy
     module->isBusy = true;
 
     // Calculate the propagation and transmission delay
     // and create new nic process out event
-    PostEvent(handleIPProcessInEvent, e, sizeof(IPProcessEventData), time);
+    PostEvent(module->deviceID, GetFuncs(handleIPProcessInEvent), e, sizeof(IPProcessEventData), time);
 
     log(module->deviceID, "IP: <- Received Data, Forwarding Up");
 }

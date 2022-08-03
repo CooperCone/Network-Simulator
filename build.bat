@@ -27,5 +27,6 @@ if "%1"=="dbg" (
 
 cl -nologo %compilerWarningFlag% /TC %srcFiles% %includeDir% %debugFlag%^
  /link -out:simulator.exe %linkerWarningFlag% %libs% | prettyCompilerOutput.exe
+@REM cl %compilerWarningFlag% %srcFiles% %includeDir% /P
 
 popd build

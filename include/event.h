@@ -10,13 +10,21 @@
 
 typedef void *EventData;
 typedef void (*HandleEvent)(EventData data);
+typedef char* (*GetHandlerName)();
 
 typedef struct {
     HandleEvent handleEvent;
+    GetHandlerName getName;
+} EventFuncs;
+
+typedef struct {
+    u64 deviceID;
+
+    EventFuncs eventFuncs;
     EventData data;
 } Event;
 
-void PostEvent(HandleEvent handler, EventData data, u64 dataSize, u64 delay);
+void PostEvent(u64 deviceID, EventFuncs funcs, EventData data, u64 dataSize, u64 delay);
 u64 CurTime();
 
 typedef struct {
@@ -39,3 +47,22 @@ typedef struct {
 
 void eventQueue_push(EventQueue *queue, EventNode event);
 EventNode eventQueue_pop(EventQueue *queue);
+
+#define GetFuncs(handlerName) handlerName ## _getFuncs()
+
+#define EventHandlerPrototype(handlerName) void handlerName(EventData data);
+
+#define EventHandlerGetName(handlerName) static char * handlerName ## _getName() {\
+    return #handlerName;\
+}
+
+#define EventHandlerGetFuncs(handlerName) static EventFuncs handlerName ## _getFuncs() {\
+    return (EventFuncs){\
+        .handleEvent=handlerName,\
+        .getName=handlerName ## _getName\
+    };\
+}
+
+#define DeclareEvent(handlerName) EventHandlerPrototype(handlerName)\
+    EventHandlerGetName(handlerName)\
+    EventHandlerGetFuncs(handlerName)

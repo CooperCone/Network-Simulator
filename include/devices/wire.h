@@ -7,7 +7,7 @@ typedef struct {
     Layer1Provider provider;
 } StableWire;
 
-Layer1Provider *stableWire_create(u64 length, u64 bandwidth);
+Layer1Provider *stableWire_create(u64 deviceID, u64 length, u64 bandwidth);
 void noError(Layer1Provider *provider, Buffer *data);
 
 typedef struct {
@@ -15,5 +15,5 @@ typedef struct {
     f64 errorRate;
 } SingleBitErrorWire;
 
-Layer1Provider *singleBitErrorWire_create(f64 errorRate, u64 length, u64 bandwidth);
+Layer1Provider *singleBitErrorWire_create(u64 deviceID, f64 errorRate, u64 length, u64 bandwidth);
 void singleBitError(Layer1Provider *provider, Buffer *data);

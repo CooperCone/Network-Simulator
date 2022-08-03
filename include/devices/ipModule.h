@@ -43,12 +43,12 @@ typedef struct IPModule {
 } IPModule;
 
 
-void handleIPModuleQueueOutEvent(EventData data);
-void handleIPModuleQueueInEvent(EventData data);
+DeclareEvent(handleIPModuleQueueOutEvent);
+DeclareEvent(handleIPModuleQueueInEvent);
 
 typedef struct {
     IPModule *module;
 } IPProcessEventData;
 
-void handleIPProcessOutEvent(EventData data);
-void handleIPProcessInEvent(EventData data);
+DeclareEvent(handleIPProcessOutEvent);
+DeclareEvent(handleIPProcessInEvent);

@@ -28,14 +28,14 @@ typedef struct NetworkInterfaceCard {
     // Arp Module
 } NetworkInterfaceCard;
 
-void handleNICQueueOutEvent(EventData data);
-void handleNICQueueInEvent(EventData data);
+DeclareEvent(handleNICQueueOutEvent);
+DeclareEvent(handleNICQueueInEvent);
 
 typedef struct {
     NetworkInterfaceCard *card;
 } NICProcessEventData;
 
-void handleNICProcessOutEvent(EventData data);
-void handleNICProcessInEvent(EventData data);
+DeclareEvent(handleNICProcessOutEvent);
+DeclareEvent(handleNICProcessInEvent);
 
 

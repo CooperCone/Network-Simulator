@@ -12,6 +12,8 @@ static struct {
     u64 numFiles;
 } fileArray;
 
+FILE *eventFile;
+
 void log(u64 deviceID, const char *msg, ...) {
     assert(deviceID > 0);
     // Our ids start with 1
@@ -39,4 +41,13 @@ void log(u64 deviceID, const char *msg, ...) {
     fprintf(file, "\n");
 
     va_end(args);
+}
+
+void logEvent(u64 deviceID, char *eventHandlerName) {
+    if (eventFile == NULL) {
+        char *name = "log/events.log";
+        eventFile = fopen(name, "w");
+    }
+
+    fprintf(eventFile, "%d: %s\n", deviceID, eventHandlerName);
 }

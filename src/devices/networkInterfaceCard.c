@@ -31,7 +31,7 @@ void handleNICQueueOutEvent(EventData data) {
             .card=card
         };
         // No delay because the card currently isn't busy
-        PostEvent(handleNICProcessOutEvent, &processEvent, sizeof(processEvent), 0);
+        PostEvent(card->deviceID, GetFuncs(handleNICProcessOutEvent), &processEvent, sizeof(processEvent), 0);
     }
 
     log(card->deviceID, "NIC: -> Queueing data");
@@ -60,7 +60,7 @@ void handleNICQueueInEvent(EventData data) {
         NICProcessEventData processEvent = {
             .card=card
         };
-        PostEvent(handleNICProcessInEvent, &processEvent, sizeof(processEvent), time);
+        PostEvent(card->deviceID, GetFuncs(handleNICProcessInEvent), &processEvent, sizeof(processEvent), time);
     }
 
     log(card->deviceID, "NIC: <- Queueing data");
@@ -116,12 +116,12 @@ void handleNICProcessOutEvent(EventData data) {
     Layer1ReceiveData receiveEventData = {0};
     receiveEventData.data = ethBuff;
     receiveEventData.receiver = card->provider.layer1Provider->other;
-    PostEvent(handleLayer1Receive, &receiveEventData, sizeof(receiveEventData), time);
+    PostEvent(card->deviceID, GetFuncs(handleLayer1Receive), &receiveEventData, sizeof(receiveEventData), time);
 
     // Set is busy
     card->isBusy = true;
 
-    PostEvent(handleNICProcessOutEvent, e, sizeof(NICProcessEventData), time);
+    PostEvent(card->deviceID, GetFuncs(handleNICProcessOutEvent), e, sizeof(NICProcessEventData), time);
 
     log(card->deviceID, "NIC: -> Sending Data");
 }
@@ -172,12 +172,12 @@ void handleNICProcessInEvent(EventData data) {
         .data=newBuff,
         .module=card->provider.layer3Provider
     };
-    PostEvent(card->provider.layer3Provider->onReceiveBuffer, &newEvent, sizeof(newEvent), time);
+    PostEvent(card->deviceID, card->provider.layer3Provider->onReceiveBuffer, &newEvent, sizeof(newEvent), time);
 
     // Set is busy
     card->isBusy = true;
 
-    PostEvent(handleNICProcessInEvent, e, sizeof(NICProcessEventData), time);
+    PostEvent(card->deviceID, GetFuncs(handleNICProcessInEvent), e, sizeof(NICProcessEventData), time);
 
     log(card->deviceID, "NIC: <- Received Data, Forwarding Up");
 }

@@ -11,6 +11,8 @@ typedef void (*InjectError)(struct Layer1Provider *provider, Buffer *data);
 typedef struct Layer1Provider {
     InjectError injectError;
 
+    u64 deviceID;
+
     u64 length;
     u64 bandwidth; // bits per second
 
@@ -25,4 +27,4 @@ typedef struct {
     Buffer data;
 } Layer1ReceiveData;
 
-void handleLayer1Receive(EventData data);
+DeclareEvent(handleLayer1Receive);

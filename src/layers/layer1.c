@@ -20,5 +20,5 @@ void handleLayer1Receive(EventData data) {
 
     // No delay because propagation and transmission delays are already accounted for?
     // Should those actually be here?
-    PostEvent(d->receiver->layer2Provider->onReceiveBuffer, &newData, sizeof(newData), 0);
+    PostEvent(d->receiver->deviceID, d->receiver->layer2Provider->onReceiveBuffer, &newData, sizeof(newData), 0);
 }

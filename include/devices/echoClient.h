@@ -1,13 +1,13 @@
 #pragma once
 
-#include "devices/udpModule.h"
+#include "layers/layer4.h"
 #include "buffer.h"
 
 #include "event.h"
 
 typedef struct EchoClient {
     u32 id;
-    UDPModule *udp;
+    Layer4Provider *layer4Provider;
 } EchoClient;
 
 void echoClient_send(EchoClient *client, char *msg);
@@ -17,5 +17,5 @@ typedef struct {
     Buffer buffer;
 } EchoClientEventData;
 
-void handleEchoClientSend(EventData data);
-void handleEchoClientReceive(EventData data);
+DeclareEvent(handleEchoClientSend);
+DeclareEvent(handleEchoClientReceive);

@@ -26,18 +26,18 @@ void echoClient_send(EchoClient *client, char *msg) {
         .buffer=buff
     };
 
-    PostEvent(handleEchoClientSend, &data, sizeof(data), time);
+    PostEvent(client->id, GetFuncs(handleEchoClientSend), &data, sizeof(data), time);
 }
 
 void handleEchoClientSend(EventData data) {
     EchoClientEventData *d = data;
 
-    UDPQueueEventData eventData = {
+    Layer4InEventData eventData = {
         .data=d->buffer,
-        .module=d->client->udp
+        .layer4=d->client->layer4Provider
     };
 
-    PostEvent(handleUDPModuleQueueOutEvent, &eventData, sizeof(eventData), 0);
+    PostEvent(d->client->id, d->client->layer4Provider->onSendBuffer, &eventData, sizeof(eventData), 0);
 
     log(d->client->id, "Echo: -> Sending: %s", d->buffer.data + 1);
 }
@@ -65,7 +65,7 @@ void handleEchoClientReceive(EventData data) {
             .buffer=buff
         };
 
-        PostEvent(handleEchoClientSend, &data, sizeof(data), time);
+        PostEvent(eventData->client->id, GetFuncs(handleEchoClientSend), &data, sizeof(data), time);
 
         log(eventData->client->id, "Echo: -> Echoing: %s", buff.data + 1);
     }

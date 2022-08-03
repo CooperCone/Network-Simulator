@@ -1,8 +1,9 @@
+- Better Event tracking
+  - Verify that the event data passed in is the correct data
+
 - Better data injected into log messages
 
 - Interfaces
-  - Layer3 interface
-  - Layer4 interface
   - Overall cleanup
     - make sure no devices in layers
     - make sure no layers included between them

@@ -11,9 +11,9 @@
 #include <string.h>
 
 void handleUDPModuleQueueOutEvent(EventData data) {
-    UDPQueueEventData *d = data;
-    UDPModule *module = d->module;
-    BufferQueue *queue = &(d->module->outgoingQueue);
+    Layer4InEventData *d = data;
+    UDPModule *module = (UDPModule*)d->layer4;
+    BufferQueue *queue = &(module->outgoingQueue);
 
     Timer timer = timer_start();
 
@@ -33,16 +33,16 @@ void handleUDPModuleQueueOutEvent(EventData data) {
         UDPProcessEventData processEvent = {
             .module=module
         };
-        PostEvent(handleUDPProcessOutEvent, &processEvent, sizeof(processEvent), time);
+        PostEvent(module->deviceID, GetFuncs(handleUDPProcessOutEvent), &processEvent, sizeof(processEvent), time);
     }
 
     log(module->deviceID, "UDP: -> Queueing Data");
 }
 
 void handleUDPModuleQueueInEvent(EventData data) {
-    UDPQueueEventData *d = data;
-    UDPModule *module = d->module;
-    BufferQueue *queue = &(d->module->incomingQueue);
+    Layer4InEventData *d = data;
+    UDPModule *module = (UDPModule*)d->layer4;
+    BufferQueue *queue = &(module->incomingQueue);
 
     Timer timer = timer_start();
 
@@ -62,7 +62,7 @@ void handleUDPModuleQueueInEvent(EventData data) {
         UDPProcessEventData processEvent = {
             .module=module
         };
-        PostEvent(handleUDPProcessInEvent, &processEvent, sizeof(processEvent), time);
+        PostEvent(module->deviceID, GetFuncs(handleUDPProcessInEvent), &processEvent, sizeof(processEvent), time);
     }
 
     log(module->deviceID, "UDP: <- Queueing Data");
@@ -100,20 +100,20 @@ void handleUDPProcessOutEvent(EventData data) {
 
     // Send buffer over wire
     Layer3InEventData eventData = {
-        .module=module->layer3Provider,
+        .module=module->provider.layer3Provider,
         .data=newBuff
     };
-    PostEvent(module->layer3Provider->onSendBuffer, &eventData, sizeof(eventData), time);
+    PostEvent(module->deviceID, module->provider.layer3Provider->onSendBuffer, &eventData, sizeof(eventData), time);
 
     // Set is busy
     module->isBusy = true;
 
-    PostEvent(handleUDPProcessOutEvent, e, sizeof(UDPProcessEventData), time);
+    PostEvent(module->deviceID, GetFuncs(handleUDPProcessOutEvent), e, sizeof(UDPProcessEventData), time);
 
     log(module->deviceID, "UDP: -> Sending Data");
 }
 
-void handleUDPProcessInEvent(EventData data) {
+void handleUDPProcessInEvent(UDPProcessEventData *data) {
     // Check if we need to do an arp request
     UDPProcessEventData *e = data;
     UDPModule *module = e->module;
@@ -141,16 +141,16 @@ void handleUDPProcessInEvent(EventData data) {
     // Figure out where to send data
     EchoClientEventData newEvent = {
         .buffer=newBuff,
-        .client=module->layer7Provider
+        .client=module->provider.layer7Provider
     };
-    PostEvent(handleEchoClientReceive, &newEvent, sizeof(newEvent), time);
+    PostEvent(module->deviceID, GetFuncs(handleEchoClientReceive), &newEvent, sizeof(newEvent), time);
 
     // Set is busy
     module->isBusy = true;
 
     // Calculate the propagation and transmission delay
     // and create new nic process out event
-    PostEvent(handleUDPProcessInEvent, e, sizeof(UDPProcessEventData), time);
+    PostEvent(module->deviceID, GetFuncs(handleUDPProcessInEvent), e, sizeof(UDPProcessEventData), time);
 
     log(module->deviceID, "UDP: <- ReceivingData, Forwarding Up");
 }
