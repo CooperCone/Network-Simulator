@@ -1,10 +1,10 @@
 #pragma once
 
-#include "util/types.h"
+#include "layers/forward.h"
 
 #include "event.h"
 #include "buffer.h"
-#include "layers/forward.h"
+#include "util/types.h"
 
 typedef u8 MACAddress[6];
 

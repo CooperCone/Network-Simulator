@@ -2,9 +2,9 @@
 
 #include "layers/forward.h"
 
-#include "util/types.h"
 #include "event.h"
 #include "buffer.h"
+#include "util/types.h"
 
 typedef u16 PortNumber;
 

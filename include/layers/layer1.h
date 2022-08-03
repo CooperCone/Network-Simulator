@@ -1,10 +1,10 @@
 #pragma once
 
+#include "layers/forward.h"
+
 #include "event.h"
 #include "Buffer.h"
 #include "util/types.h"
-
-#include "layers/forward.h"
 
 typedef void (*InjectError)(struct Layer1Provider *provider, Buffer *data);
 
