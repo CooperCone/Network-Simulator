@@ -38,6 +38,7 @@ int main(int argc, char **argv) {
     module1.deviceID = 1;
     module1.incomingQueue = bufferQueue_create(8);
     module1.outgoingQueue = bufferQueue_create(8);
+    ipAddr_fromStr("192.168.1.1", module1.address);
     module1.provider.layer2Provider = &(card1.provider);
     module1.provider.onReceiveBuffer = GetFuncs(handleIPModuleQueueInEvent);
     module1.provider.onSendBuffer = GetFuncs(handleIPModuleQueueOutEvent);
@@ -73,6 +74,7 @@ int main(int argc, char **argv) {
     module2.deviceID = 2;
     module2.incomingQueue = bufferQueue_create(8);
     module2.outgoingQueue = bufferQueue_create(8);
+    ipAddr_fromStr("192.168.1.2", module2.address);
     module2.provider.layer2Provider = &(card2.provider);
     module2.provider.onReceiveBuffer = GetFuncs(handleIPModuleQueueInEvent);
     module2.provider.onSendBuffer = GetFuncs(handleIPModuleQueueOutEvent);
@@ -102,7 +104,9 @@ int main(int argc, char **argv) {
 
     // Set up initial traffic
 
-    echoClient_send(&echo1, "This is a message");
+    IPAddress dst;
+    ipAddr_fromStr("192.168.1.2", dst);
+    echoClient_send(&echo1, "This is a message", dst);
 
     // Network Simulation
     while (eventQueue.numNodes > 0) {

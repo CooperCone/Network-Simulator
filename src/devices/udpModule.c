@@ -33,6 +33,7 @@ void handleUDPModuleQueueOutEvent(EventData data) {
         UDPProcessEventData processEvent = {
             .module=module
         };
+        ipAddr_copy(processEvent.addr, d->addr);
         PostEvent(module->deviceID, GetFuncs(handleUDPProcessOutEvent), &processEvent, sizeof(processEvent), time);
     }
 
@@ -62,6 +63,7 @@ void handleUDPModuleQueueInEvent(EventData data) {
         UDPProcessEventData processEvent = {
             .module=module
         };
+        ipAddr_copy(processEvent.addr, d->addr);
         PostEvent(module->deviceID, GetFuncs(handleUDPProcessInEvent), &processEvent, sizeof(processEvent), time);
     }
 
@@ -103,6 +105,7 @@ void handleUDPProcessOutEvent(EventData data) {
         .module=module->provider.layer3Provider,
         .data=newBuff
     };
+    ipAddr_copy(eventData.addr, e->addr);
     PostEvent(module->deviceID, module->provider.layer3Provider->onSendBuffer, &eventData, sizeof(eventData), time);
 
     // Set is busy
@@ -143,6 +146,7 @@ void handleUDPProcessInEvent(UDPProcessEventData *data) {
         .buffer=newBuff,
         .client=module->provider.layer7Provider
     };
+    ipAddr_copy(newEvent.addr, e->addr);
     PostEvent(module->deviceID, GetFuncs(handleEchoClientReceive), &newEvent, sizeof(newEvent), time);
 
     // Set is busy

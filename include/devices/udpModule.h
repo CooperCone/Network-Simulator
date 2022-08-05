@@ -23,6 +23,7 @@ DeclareEvent(handleUDPModuleQueueInEvent);
 
 typedef struct {
     UDPModule *module;
+    IPAddress addr;
 } UDPProcessEventData;
 
 DeclareEvent(handleUDPProcessOutEvent);

@@ -7,7 +7,7 @@
 #include <string.h>
 #include <stdio.h>
 
-void echoClient_send(EchoClient *client, char *msg) {
+void echoClient_send(EchoClient *client, char *msg, IPAddress addr) {
     Timer timer = timer_start();
 
     Buffer buff = {0};
@@ -25,6 +25,7 @@ void echoClient_send(EchoClient *client, char *msg) {
         .client=client,
         .buffer=buff
     };
+    ipAddr_copy(data.addr, addr);
 
     PostEvent(client->id, GetFuncs(handleEchoClientSend), &data, sizeof(data), time);
 }
@@ -36,6 +37,7 @@ void handleEchoClientSend(EventData data) {
         .data=d->buffer,
         .layer4=d->client->layer4Provider
     };
+    ipAddr_copy(eventData.addr, d->addr);
 
     PostEvent(d->client->id, d->client->layer4Provider->onSendBuffer, &eventData, sizeof(eventData), 0);
 
@@ -64,6 +66,7 @@ void handleEchoClientReceive(EventData data) {
             .client=eventData->client,
             .buffer=buff
         };
+        ipAddr_copy(data.addr, eventData->addr);
 
         PostEvent(eventData->client->id, GetFuncs(handleEchoClientSend), &data, sizeof(data), time);
 

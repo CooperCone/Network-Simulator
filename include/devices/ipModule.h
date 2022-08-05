@@ -48,6 +48,7 @@ DeclareEvent(handleIPModuleQueueInEvent);
 
 typedef struct {
     IPModule *module;
+    IPAddress addr;
 } IPProcessEventData;
 
 DeclareEvent(handleIPProcessOutEvent);

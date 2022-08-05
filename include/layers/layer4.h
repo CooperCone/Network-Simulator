@@ -28,4 +28,5 @@ typedef struct Layer4Provider {
 typedef struct {
     Layer4Provider *layer4;
     Buffer data;
+    IPAddress addr;
 } Layer4InEventData;

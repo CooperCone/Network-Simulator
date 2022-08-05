@@ -1,11 +1,16 @@
+- ARP
+  - Layer2 Requires ip address
+  - ARP module
+
+- Switches
+  - Mac address table
+
 - Better Event tracking
   - Verify that the event data passed in is the correct data
 
 - Better data injected into log messages
 
 - Reliability
-  - Layer3
-    - header checksum
   - Layer4
     - checksum
 
@@ -14,8 +19,6 @@
 - Scenario testing
 
 - ARP
-
-- Switches
 
 - Routers
 

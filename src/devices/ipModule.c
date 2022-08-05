@@ -36,7 +36,8 @@ void handleIPModuleQueueOutEvent(EventData data) {
         IPProcessEventData processEvent = {
             .module=module
         };
-    PostEvent(module->deviceID, GetFuncs(handleIPProcessOutEvent), &processEvent, sizeof(processEvent), time);
+        ipAddr_copy(processEvent.addr, d->addr);
+        PostEvent(module->deviceID, GetFuncs(handleIPProcessOutEvent), &processEvent, sizeof(processEvent), time);
     }
     log(module->deviceID, "IP: -> Queueing Data");
 }
@@ -92,8 +93,8 @@ void handleIPProcessOutEvent(EventData data) {
     header.timeToLive = 255;
     header.upperLayerProtocol = 0; // TODO: Set this based on the upper protocol
     header.checksum = 0;
-    memcpy(header.srcIPAddr, module->address, sizeof(IPAddress));
-    // TODO: Destination ip address
+    ipAddr_copy(header.srcIPAddr, module->address);
+    ipAddr_copy(header.dstIPAddr, e->addr);
 
     // IP Header Checksum
     header.checksum = internetChecksum((u16*)&header, sizeof(header) / 2);
@@ -120,7 +121,9 @@ void handleIPProcessOutEvent(EventData data) {
 
     PostEvent(module->deviceID, GetFuncs(handleIPProcessOutEvent), e, sizeof(IPProcessEventData), time);
 
-    log(module->deviceID, "IP: -> Sending Data");
+    IPStr ipAddr;
+    ipAddr_toStr(header.dstIPAddr, ipAddr);
+    log(module->deviceID, "IP: -> Sending Data to %s", ipAddr);
 }
 
 void handleIPProcessInEvent(EventData data) {
@@ -146,7 +149,7 @@ void handleIPProcessInEvent(EventData data) {
     u16 checksumComplement = internetChecksumComplement((u16*)header, sizeof(IPHeader) / 2);
     if (checksumComplement + checksum != 0xFFFF) {
         printf("Invalid IP Checksum!!!\n");
-    return;
+        return;
     }
 
     Buffer newBuff = {
@@ -162,6 +165,7 @@ void handleIPProcessInEvent(EventData data) {
         .data=newBuff,
         .layer4=module->provider.layer4Provider
     };
+    ipAddr_copy(newEvent.addr, header->srcIPAddr);
     PostEvent(module->deviceID, module->provider.layer4Provider->onReceiveBuffer, &newEvent, sizeof(newEvent), time);
 
     // Set is busy
