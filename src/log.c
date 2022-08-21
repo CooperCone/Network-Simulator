@@ -36,9 +36,10 @@ void log(u64 deviceID, const char *msg, ...) {
     va_start(args, msg);
 
     FILE *file = fileArray.files[deviceID];
-    fprintf(file, "%d ", CurTime());
+    fprintf(file, "%ld ", CurTime());
     vfprintf(file, msg, args);
     fprintf(file, "\n");
+    fflush(file);
 
     va_end(args);
 }
@@ -49,5 +50,6 @@ void logEvent(u64 deviceID, char *eventHandlerName) {
         eventFile = fopen(name, "w");
     }
 
-    fprintf(eventFile, "%d: %s\n", deviceID, eventHandlerName);
+    fprintf(eventFile, "%ld: %s\n", deviceID, eventHandlerName);
+    fflush(eventFile);
 }

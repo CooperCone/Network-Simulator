@@ -1,6 +1,7 @@
 #include "devices/udpModule.h"
 
 #include "devices/echoClient.h"
+#include "devices/ipModule.h"
 
 #include "log.h"
 #include "timer.h"
@@ -11,8 +12,8 @@
 #include <string.h>
 
 void handleUDPModuleQueueOutEvent(EventData data) {
-    Layer4InEventData *d = data;
-    UDPModule *module = (UDPModule*)d->layer4;
+    UDPInEventData *d = data;
+    UDPModule *module = (UDPModule*)d->module;
     BufferQueue *queue = &(module->outgoingQueue);
 
     Timer timer = timer_start();
@@ -31,18 +32,18 @@ void handleUDPModuleQueueOutEvent(EventData data) {
 
     if (!module->isBusy) {
         UDPProcessEventData processEvent = {
-            .module=module
+            .module=module,
+            .addr=d->addr
         };
-        ipAddr_copy(processEvent.addr, d->addr);
-        PostEvent(module->deviceID, GetFuncs(handleUDPProcessOutEvent), &processEvent, sizeof(processEvent), time);
+        PostEvent(module->deviceID, GetFuncs(handleUDPProcessOutEvent), &processEvent, UDPProcessEventData, time);
     }
 
     log(module->deviceID, "UDP: -> Queueing Data");
 }
 
 void handleUDPModuleQueueInEvent(EventData data) {
-    Layer4InEventData *d = data;
-    UDPModule *module = (UDPModule*)d->layer4;
+    UDPInEventData *d = data;
+    UDPModule *module = (UDPModule*)d->module;
     BufferQueue *queue = &(module->incomingQueue);
 
     Timer timer = timer_start();
@@ -61,10 +62,10 @@ void handleUDPModuleQueueInEvent(EventData data) {
 
     if (!module->isBusy) {
         UDPProcessEventData processEvent = {
-            .module=module
+            .module=module,
+            .addr=d->addr
         };
-        ipAddr_copy(processEvent.addr, d->addr);
-        PostEvent(module->deviceID, GetFuncs(handleUDPProcessInEvent), &processEvent, sizeof(processEvent), time);
+        PostEvent(module->deviceID, GetFuncs(handleUDPProcessInEvent), &processEvent, UDPProcessEventData, time);
     }
 
     log(module->deviceID, "UDP: <- Queueing Data");
@@ -101,22 +102,22 @@ void handleUDPProcessOutEvent(EventData data) {
     u64 time = timer_stop(timer);
 
     // Send buffer over wire
-    Layer3InEventData eventData = {
-        .module=module->provider.layer3Provider,
-        .data=newBuff
+    IPInEventData eventData = {
+        .module=module->ipModule,
+        .data=newBuff,
+        .addr=e->addr
     };
-    ipAddr_copy(eventData.addr, e->addr);
-    PostEvent(module->deviceID, module->provider.layer3Provider->onSendBuffer, &eventData, sizeof(eventData), time);
+    PostEvent(module->deviceID, module->ipModule->onSendBuffer, &eventData, IPInEventData, time);
 
     // Set is busy
     module->isBusy = true;
 
-    PostEvent(module->deviceID, GetFuncs(handleUDPProcessOutEvent), e, sizeof(UDPProcessEventData), time);
+    PostEvent(module->deviceID, GetFuncs(handleUDPProcessOutEvent), e, UDPProcessEventData, time);
 
     log(module->deviceID, "UDP: -> Sending Data");
 }
 
-void handleUDPProcessInEvent(UDPProcessEventData *data) {
+void handleUDPProcessInEvent(void *data) {
     // Check if we need to do an arp request
     UDPProcessEventData *e = data;
     UDPModule *module = e->module;
@@ -144,17 +145,17 @@ void handleUDPProcessInEvent(UDPProcessEventData *data) {
     // Figure out where to send data
     EchoClientEventData newEvent = {
         .buffer=newBuff,
-        .client=module->provider.layer7Provider
+        .client=module->echoClient,
+        .addr=e->addr
     };
-    ipAddr_copy(newEvent.addr, e->addr);
-    PostEvent(module->deviceID, GetFuncs(handleEchoClientReceive), &newEvent, sizeof(newEvent), time);
+    PostEvent(module->deviceID, GetFuncs(handleEchoClientReceive), &newEvent, EchoClientEventData, time);
 
     // Set is busy
     module->isBusy = true;
 
     // Calculate the propagation and transmission delay
     // and create new nic process out event
-    PostEvent(module->deviceID, GetFuncs(handleUDPProcessInEvent), e, sizeof(UDPProcessEventData), time);
+    PostEvent(module->deviceID, GetFuncs(handleUDPProcessInEvent), e, UDPProcessEventData, time);
 
     log(module->deviceID, "UDP: <- ReceivingData, Forwarding Up");
 }

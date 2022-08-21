@@ -2,6 +2,7 @@
 
 #include "devices/ipModule.h"
 #include "devices/udpModule.h"
+#include "devices/arpModule.h"
 
 #include "log.h"
 #include "timer.h"
@@ -12,26 +13,31 @@
 #include <string.h>
 
 void handleNICQueueOutEvent(EventData data) {
-    Layer2InEventData *d = data;
-    NetworkInterfaceCard *card = (NetworkInterfaceCard*)d->provider;
-    BufferQueue *queue = &(card->outgoingQueue);
+    NICQueueOutData *d = data;
+    NetworkInterfaceCard *card = (NetworkInterfaceCard*)d->card;
+    NICOutQueueList *queue = card->outgoingQueue;
 
     // If queue full, drop traffic
-    if (queue->numBuffers == queue->maxBuffers) {
+    // TODO: don't hardcode the max queue size
+    if (sll_size(&(queue->node)) == 8) {
         log(card->deviceID, "NIC: -> Queue Full, Dropping");
         return;
     }
 
     // Otherwise, add to queue and post a process event if
     // NIC is not busy
-    bufferQueue_push(queue, d->data);
+    NICOutQueueList newNode = {
+        .buffer=d->data,
+        .protocol=d->higherProtocol
+    };
+    card->outgoingQueue = (NICOutQueueList*)sll_prepend(&(queue->node), &(newNode.node), sizeof(newNode));
 
     if (!card->isBusy) {
         NICProcessEventData processEvent = {
             .card=card
         };
         // No delay because the card currently isn't busy
-        PostEvent(card->deviceID, GetFuncs(handleNICProcessOutEvent), &processEvent, sizeof(processEvent), 0);
+        PostEvent(card->deviceID, GetFuncs(handleNICProcessOutEvent), &processEvent, NICProcessEventData, 0);
     }
 
     log(card->deviceID, "NIC: -> Queueing data");
@@ -60,7 +66,7 @@ void handleNICQueueInEvent(EventData data) {
         NICProcessEventData processEvent = {
             .card=card
         };
-        PostEvent(card->deviceID, GetFuncs(handleNICProcessInEvent), &processEvent, sizeof(processEvent), time);
+        PostEvent(card->deviceID, GetFuncs(handleNICProcessInEvent), &processEvent, NICProcessEventData, time);
     }
 
     log(card->deviceID, "NIC: <- Queueing data");
@@ -73,12 +79,13 @@ void handleNICProcessOutEvent(EventData data) {
 
     Timer timer = timer_start();
 
-    if (card->outgoingQueue.numBuffers == 0) {
+    if (sll_size(&(card->outgoingQueue->node)) == 0) {
         card->isBusy = false;
         return;
     }
 
-    Buffer buff = bufferQueue_pop(&(card->outgoingQueue));
+    NICOutQueueList lastNode = {0};
+    card->outgoingQueue = (NICOutQueueList*)sll_popLast(&(card->outgoingQueue->node), &(lastNode.node), sizeof(lastNode));
 
     EthernetHeader ethHeader = {0};
     { // Fill Header
@@ -89,21 +96,21 @@ void handleNICProcessOutEvent(EventData data) {
         // memcpy(ethHeader.dstAddr, card->provider.layer1Provider->other->layer2Provider->address, sizeof(MACAddress));
         memcpy(ethHeader.srcAddr, card->address, sizeof(MACAddress));
 
-        memcpy(ethHeader.type, (u16*)&(buff.dataSize), 2);
+        ethHeader.type = lastNode.protocol;
     }
 
     // Copy header, data, and crc
     Buffer ethBuff = {
-        .dataSize=buff.dataSize + sizeof(EthernetHeader) + 4,
+        .dataSize=lastNode.buffer.dataSize + sizeof(EthernetHeader) + 4,
     };
     ethBuff.data = calloc(ethBuff.dataSize, 1);
 
     memcpy(ethBuff.data, &ethHeader, sizeof(EthernetHeader));
-    memcpy(ethBuff.data + sizeof(EthernetHeader), buff.data, buff.dataSize);
+    memcpy(ethBuff.data + sizeof(EthernetHeader), lastNode.buffer.data, lastNode.buffer.dataSize);
 
     // Checksum
     u32 checksum = buffer_checksum32(ethBuff);
-    memcpy(ethBuff.data + buff.dataSize + sizeof(EthernetHeader), &checksum, sizeof(checksum));
+    memcpy(ethBuff.data + lastNode.buffer.dataSize + sizeof(EthernetHeader), &checksum, sizeof(checksum));
 
     u64 time = timer_stop(timer);
 
@@ -116,12 +123,13 @@ void handleNICProcessOutEvent(EventData data) {
     Layer1ReceiveData receiveEventData = {0};
     receiveEventData.data = ethBuff;
     receiveEventData.receiver = card->provider.layer1Provider->other;
-    PostEvent(card->deviceID, GetFuncs(handleLayer1Receive), &receiveEventData, sizeof(receiveEventData), time);
+
+    PostEvent(card->deviceID, GetFuncs(handleLayer1Receive), &receiveEventData, Layer1ReceiveData, time);
 
     // Set is busy
     card->isBusy = true;
 
-    PostEvent(card->deviceID, GetFuncs(handleNICProcessOutEvent), e, sizeof(NICProcessEventData), time);
+    PostEvent(card->deviceID, GetFuncs(handleNICProcessOutEvent), e, NICProcessEventData, time);
 
     log(card->deviceID, "NIC: -> Sending Data");
 }
@@ -168,16 +176,25 @@ void handleNICProcessInEvent(EventData data) {
     u64 time = timer_stop(timer);
 
     // Figure out where to send data
-    Layer3InEventData newEvent = {
-        .data=newBuff,
-        .module=card->provider.layer3Provider
-    };
-    PostEvent(card->deviceID, card->provider.layer3Provider->onReceiveBuffer, &newEvent, sizeof(newEvent), time);
+    if (header.type == EtherType_ARP) {
+        ARPResponseData arpEvent = {
+            .module=card->arpModule,
+            .buffer=newBuff
+        };
+        PostEvent(card->deviceID, GetFuncs(handleARPResponseEvent), &arpEvent, ARPResponseData, time);
+    }
+    else if (header.type == EtherType_IPv4) {
+        IPInEventData newEvent = {
+            .data=newBuff,
+            .module=card->ipModule
+        };
+        PostEvent(card->deviceID, card->ipModule->onReceiveBuffer, &newEvent, IPInEventData, time);
+    }    
 
     // Set is busy
     card->isBusy = true;
 
-    PostEvent(card->deviceID, GetFuncs(handleNICProcessInEvent), e, sizeof(NICProcessEventData), time);
+    PostEvent(card->deviceID, GetFuncs(handleNICProcessInEvent), e, NICProcessEventData, time);
 
     log(card->deviceID, "NIC: <- Received Data, Forwarding Up");
 }

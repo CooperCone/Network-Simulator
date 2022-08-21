@@ -1,6 +1,6 @@
 #pragma once
 
-#include "layers/layer4.h"
+#include "devices/forward.h"
 #include "layers/layer3.h"
 #include "buffer.h"
 
@@ -8,7 +8,7 @@
 
 typedef struct EchoClient {
     u32 id;
-    Layer4Provider *layer4Provider;
+    struct UDPModule *udpModule;
 } EchoClient;
 
 void echoClient_send(EchoClient *client, char *msg, IPAddress addr);
@@ -19,5 +19,5 @@ typedef struct {
     IPAddress addr;
 } EchoClientEventData;
 
-DeclareEvent(handleEchoClientSend);
-DeclareEvent(handleEchoClientReceive);
+DeclareEvent(handleEchoClientSend, EchoClientEventData);
+DeclareEvent(handleEchoClientReceive, EchoClientEventData);

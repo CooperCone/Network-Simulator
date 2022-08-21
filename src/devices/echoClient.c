@@ -1,5 +1,7 @@
 #include "devices/echoClient.h"
 
+#include "devices/udpModule.h"
+
 #include "timer.h"
 #include "log.h"
 
@@ -23,23 +25,23 @@ void echoClient_send(EchoClient *client, char *msg, IPAddress addr) {
 
     EchoClientEventData data = {
         .client=client,
-        .buffer=buff
+        .buffer=buff,
+        .addr=addr
     };
-    ipAddr_copy(data.addr, addr);
 
-    PostEvent(client->id, GetFuncs(handleEchoClientSend), &data, sizeof(data), time);
+    PostEvent(client->id, GetFuncs(handleEchoClientSend), &data, EchoClientEventData, time);
 }
 
 void handleEchoClientSend(EventData data) {
     EchoClientEventData *d = data;
 
-    Layer4InEventData eventData = {
+    UDPInEventData eventData = {
         .data=d->buffer,
-        .layer4=d->client->layer4Provider
+        .module=d->client->udpModule,
+        .addr=d->addr
     };
-    ipAddr_copy(eventData.addr, d->addr);
 
-    PostEvent(d->client->id, d->client->layer4Provider->onSendBuffer, &eventData, sizeof(eventData), 0);
+    PostEvent(d->client->id, d->client->udpModule->onSendBuffer, &eventData, UDPInEventData, 0);
 
     log(d->client->id, "Echo: -> Sending: %s", d->buffer.data + 1);
 }
@@ -64,11 +66,11 @@ void handleEchoClientReceive(EventData data) {
 
         EchoClientEventData data = {
             .client=eventData->client,
-            .buffer=buff
+            .buffer=buff,
+            .addr=eventData->addr
         };
-        ipAddr_copy(data.addr, eventData->addr);
 
-        PostEvent(eventData->client->id, GetFuncs(handleEchoClientSend), &data, sizeof(data), time);
+        PostEvent(eventData->client->id, GetFuncs(handleEchoClientSend), &data, EchoClientEventData, time);
 
         log(eventData->client->id, "Echo: -> Echoing: %s", buff.data + 1);
     }

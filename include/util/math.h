@@ -12,7 +12,7 @@
 #define megaToUnit(unit) (1000 * (kiloToUnit(unit)))
 #define gigaToUnit(unit) (1000 * (megaToUnit(unit)))
 
-inline u16 internetChecksumComplement(u16 *bytes, u64 length) {
+static inline u16 internetChecksumComplement(u16 *bytes, u64 length) {
     u32 checksum = 0;
     for (u64 i = 0; i < length; i++) {
         checksum += bytes[i];
@@ -26,6 +26,6 @@ inline u16 internetChecksumComplement(u16 *bytes, u64 length) {
     return (u16)checksum;
 }
 
-inline u16 internetChecksum(u16 *bytes, u64 length) {
+static inline u16 internetChecksum(u16 *bytes, u64 length) {
     return ~internetChecksumComplement(bytes, length);
 }

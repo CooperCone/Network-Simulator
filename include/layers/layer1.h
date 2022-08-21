@@ -3,7 +3,7 @@
 #include "layers/forward.h"
 
 #include "event.h"
-#include "Buffer.h"
+#include "buffer.h"
 #include "util/types.h"
 
 typedef void (*InjectError)(struct Layer1Provider *provider, Buffer *data);
@@ -27,4 +27,4 @@ typedef struct {
     Buffer data;
 } Layer1ReceiveData;
 
-DeclareEvent(handleLayer1Receive);
+DeclareEvent(handleLayer1Receive, Layer1ReceiveData);

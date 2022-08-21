@@ -1,16 +1,33 @@
 #pragma once
 
-#include "layers/layer4.h"
+#include "layers/forward.h"
+#include "devices/forward.h"
 
 #include "layers/layer3.h"
 
+#include "event.h"
 #include "bufferQueue.h"
 #include "util/types.h"
 
+typedef u16 PortNumber;
+
+#pragma pack(push)
+typedef struct {
+    PortNumber srcPort;
+    PortNumber dstPort;
+    u16 length;
+    u16 checksum;
+} UDPHeader;
+#pragma pack(pop)
+
 typedef struct UDPModule {
-    Layer4Provider provider;
+    struct EchoClient *echoClient;
+    struct IPModule *ipModule;
 
     u64 deviceID;
+
+    EventFuncs onReceiveBuffer;
+    EventFuncs onSendBuffer;
 
     BufferQueue outgoingQueue;
     BufferQueue incomingQueue;
@@ -18,13 +35,19 @@ typedef struct UDPModule {
     bool isBusy;
 } UDPModule;
 
-DeclareEvent(handleUDPModuleQueueOutEvent);
-DeclareEvent(handleUDPModuleQueueInEvent);
+typedef struct {
+    UDPModule *module;
+    Buffer data;
+    IPAddress addr;
+} UDPInEventData;
+
+DeclareEvent(handleUDPModuleQueueOutEvent, UDPInEventData);
+DeclareEvent(handleUDPModuleQueueInEvent, UDPInEventData);
 
 typedef struct {
     UDPModule *module;
     IPAddress addr;
 } UDPProcessEventData;
 
-DeclareEvent(handleUDPProcessOutEvent);
-DeclareEvent(handleUDPProcessInEvent);
+DeclareEvent(handleUDPProcessOutEvent, UDPProcessEventData);
+DeclareEvent(handleUDPProcessInEvent, UDPProcessEventData);

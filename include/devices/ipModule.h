@@ -1,5 +1,7 @@
 #pragma once
 
+#include "devices/forward.h"
+
 #include "layers/layer3.h"
 
 #include "event.h"
@@ -30,7 +32,11 @@ typedef struct {
 #pragma pack(pop)
 
 typedef struct IPModule {
-    Layer3Provider provider;
+    struct ARPModule *arpModule;
+    struct UDPModule *udpModule;
+
+    EventFuncs onReceiveBuffer;
+    EventFuncs onSendBuffer;
 
     u64 deviceID;
 
@@ -42,14 +48,19 @@ typedef struct IPModule {
     bool isBusy;
 } IPModule;
 
+typedef struct {
+    IPModule *module;
+    Buffer data;
+    IPAddress addr;
+} IPInEventData;
 
-DeclareEvent(handleIPModuleQueueOutEvent);
-DeclareEvent(handleIPModuleQueueInEvent);
+DeclareEvent(handleIPModuleQueueOutEvent, IPInEventData);
+DeclareEvent(handleIPModuleQueueInEvent, IPInEventData);
 
 typedef struct {
     IPModule *module;
     IPAddress addr;
 } IPProcessEventData;
 
-DeclareEvent(handleIPProcessOutEvent);
-DeclareEvent(handleIPProcessInEvent);
+DeclareEvent(handleIPProcessOutEvent, IPProcessEventData);
+DeclareEvent(handleIPProcessInEvent, IPProcessEventData);

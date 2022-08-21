@@ -2,6 +2,8 @@
 
 #include "layers/layer2.h"
 
+#include "log.h"
+
 void layer1Provider_connect(Layer1Provider *provider1, Layer1Provider *provider2) {
     provider1->other = provider2;
     provider2->other = provider1;
@@ -20,5 +22,5 @@ void handleLayer1Receive(EventData data) {
 
     // No delay because propagation and transmission delays are already accounted for?
     // Should those actually be here?
-    PostEvent(d->receiver->deviceID, d->receiver->layer2Provider->onReceiveBuffer, &newData, sizeof(newData), 0);
+    PostEvent(d->receiver->deviceID, d->receiver->layer2Provider->onReceiveBuffer, &newData, Layer2InEventData, 0);
 }

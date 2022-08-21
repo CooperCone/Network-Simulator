@@ -15,3 +15,24 @@ typedef int64_t s64;
 
 typedef float f32;
 typedef double f64;
+
+typedef union {
+    u32 w;
+    struct {
+        u8 b1;
+        u8 b2;
+        u8 b3;
+        u8 b4;
+    };
+    u8 bs[4];
+} IPAddress;
+typedef char IPStr[16];
+
+void ipAddr_toStr(IPAddress addr, IPStr outStr);
+IPAddress ipAddr_fromStr(IPStr str);
+
+typedef u8 MACAddress[6];
+typedef char MACStr[18];
+
+void macAddr_copy(MACAddress dst, MACAddress src);
+void macAddr_toStr(MACAddress addr, MACStr outStr);

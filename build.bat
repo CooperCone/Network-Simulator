@@ -5,7 +5,7 @@ call vcvars64 >NUL
 
 set srcDir=%RootPath%/src
 set outputFile=%srcDir%/*.c %srcDir%/devices/*.c %srcDir%/layers/*.c^
- %srcDir%/platform/win32.c
+ %srcDir%/util/*.c %srcDir%/collections/*.c %srcDir%/platform/win32.c
 
 set includeDir=-I%RootPath%/include
 set srcFiles=%outputFile%

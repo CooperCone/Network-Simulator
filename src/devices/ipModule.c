@@ -1,7 +1,7 @@
 #include "devices/ipModule.h"
 
 #include "devices/udpModule.h"
-#include "layers/layer2.h"
+#include "devices/arpModule.h"
 
 #include "log.h"
 #include "timer.h"
@@ -14,7 +14,7 @@
 #include <stdlib.h>
 
 void handleIPModuleQueueOutEvent(EventData data) {
-    Layer3InEventData *d = data;
+    IPInEventData *d = data;
     IPModule *module = (IPModule*)d->module;
     BufferQueue *queue = &(module->outgoingQueue);
 
@@ -34,16 +34,16 @@ void handleIPModuleQueueOutEvent(EventData data) {
 
     if (!module->isBusy) {
         IPProcessEventData processEvent = {
-            .module=module
+            .module=module,
+            .addr=d->addr
         };
-        ipAddr_copy(processEvent.addr, d->addr);
-        PostEvent(module->deviceID, GetFuncs(handleIPProcessOutEvent), &processEvent, sizeof(processEvent), time);
+        PostEvent(module->deviceID, GetFuncs(handleIPProcessOutEvent), &processEvent, IPProcessEventData, time);
     }
     log(module->deviceID, "IP: -> Queueing Data");
 }
 
 void handleIPModuleQueueInEvent(EventData data) {
-    Layer3InEventData *d = data;
+    IPInEventData *d = data;
     IPModule *module = (IPModule*)d->module;
     BufferQueue *queue = &(module->incomingQueue);
 
@@ -65,7 +65,7 @@ void handleIPModuleQueueInEvent(EventData data) {
         IPProcessEventData processEvent = {
             .module=module
         };
-        PostEvent(module->deviceID, GetFuncs(handleIPProcessInEvent), &processEvent, sizeof(processEvent), time);
+        PostEvent(module->deviceID, GetFuncs(handleIPProcessInEvent), &processEvent, IPProcessEventData, time);
     }
 
     log(module->deviceID, "IP: <- Queueing Data");
@@ -93,8 +93,8 @@ void handleIPProcessOutEvent(EventData data) {
     header.timeToLive = 255;
     header.upperLayerProtocol = 0; // TODO: Set this based on the upper protocol
     header.checksum = 0;
-    ipAddr_copy(header.srcIPAddr, module->address);
-    ipAddr_copy(header.dstIPAddr, e->addr);
+    header.srcIPAddr = module->address;
+    header.dstIPAddr = e->addr;
 
     // IP Header Checksum
     header.checksum = internetChecksum((u16*)&header, sizeof(header) / 2);
@@ -108,18 +108,18 @@ void handleIPProcessOutEvent(EventData data) {
 
     u64 time = timer_stop(timer);
 
-    // Send buffer over wire
-    Layer2InEventData eventData = {
-        .provider=module->provider.layer2Provider,
-        .data=newBuff
+    // Send buffer to arp module
+    ARPRequestData eventData = {
+        .addr=header.dstIPAddr,
+        .buffer=newBuff,
+        .module=module->arpModule
     };
-
-    PostEvent(module->deviceID, module->provider.layer2Provider->onSendBuffer, &eventData, sizeof(eventData), time);
+    PostEvent(module->deviceID, GetFuncs(handleARPSendEvent), &eventData, ARPRequestData, time);
 
     // Set is busy
     module->isBusy = true;
 
-    PostEvent(module->deviceID, GetFuncs(handleIPProcessOutEvent), e, sizeof(IPProcessEventData), time);
+    PostEvent(module->deviceID, GetFuncs(handleIPProcessOutEvent), e, IPProcessEventData, time);
 
     IPStr ipAddr;
     ipAddr_toStr(header.dstIPAddr, ipAddr);
@@ -161,19 +161,19 @@ void handleIPProcessInEvent(EventData data) {
     u64 time = timer_stop(timer);
 
     // Figure out where to send data
-    Layer4InEventData newEvent = {
+    UDPInEventData newEvent = {
         .data=newBuff,
-        .layer4=module->provider.layer4Provider
+        .module=module->udpModule,
+        .addr=header->srcIPAddr
     };
-    ipAddr_copy(newEvent.addr, header->srcIPAddr);
-    PostEvent(module->deviceID, module->provider.layer4Provider->onReceiveBuffer, &newEvent, sizeof(newEvent), time);
+    PostEvent(module->deviceID, module->udpModule->onReceiveBuffer, &newEvent, UDPInEventData, time);
 
     // Set is busy
     module->isBusy = true;
 
     // Calculate the propagation and transmission delay
     // and create new nic process out event
-    PostEvent(module->deviceID, GetFuncs(handleIPProcessInEvent), e, sizeof(IPProcessEventData), time);
+    PostEvent(module->deviceID, GetFuncs(handleIPProcessInEvent), e, IPProcessEventData, time);
 
     log(module->deviceID, "IP: <- Received Data, Forwarding Up");
 }

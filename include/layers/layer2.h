@@ -6,20 +6,21 @@
 #include "buffer.h"
 #include "util/types.h"
 
-typedef u8 MACAddress[6];
+typedef u16 EtherType;
+#define EtherType_IPv4 0x0800
+#define EtherType_ARP 0x0806
 
 #pragma pack(push)
 typedef struct {
     u8 preamble[8];
     MACAddress dstAddr;
     MACAddress srcAddr;
-    u8 type[2];
+    EtherType type;
 } EthernetHeader;
 #pragma pack(pop)
 
 typedef struct Layer2Provider {
     struct Layer1Provider *layer1Provider;
-    struct Layer3Provider *layer3Provider;
 
     EventFuncs onReceiveBuffer;
     EventFuncs onSendBuffer;
