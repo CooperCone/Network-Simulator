@@ -23,7 +23,6 @@ typedef struct Layer2Provider {
     struct Layer1Provider *layer1Provider;
 
     EventFuncs onReceiveBuffer;
-    EventFuncs onSendBuffer;
 } Layer2Provider;
 
 typedef struct {

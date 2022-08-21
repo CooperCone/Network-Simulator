@@ -31,6 +31,11 @@ IPAddress ipAddr_fromStr(IPStr str) {
     return outAddr;
 }
 
+
+bool macAddr_cmp(MACAddress addr1, MACAddress addr2) {
+    return memcmp(addr1, addr2, 6) == 0;
+}
+
 void macAddr_copy(MACAddress dst, MACAddress src) {
     memcpy(dst, src, 6);
 }

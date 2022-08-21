@@ -1,11 +1,6 @@
-- ARP
-  - ARP module
+- Should we have ports as a layer1 device?
 
-- Switches
-  - Mac address table
-
-- Better Event tracking
-  - Verify that the event data passed in is the correct data
+- Unmanaged Switches
 
 - Better data injected into log messages
 
@@ -17,14 +12,9 @@
 
 - Scenario testing
 
-- ARP
+- Scenario benchmarking
 
 - Routers
-
-- Layer Interfaces
-
-- Event system logging
-  - Event toString?
 
 - IP
   - Forwarding
@@ -36,6 +26,24 @@
   - Congestion control
   - Flow control
 
-- Logging
-  - All event logging
-  - 
+ftp
+
+im protocols
+
+http
+
+https/scp/secure im
+
+pcap
+
+firewall
+
+load balancer
+
+managed switches
+
+Hardware Simulator
+
+C Compiler and Virtual Machine for application layer
+
+Cisco virtual machine

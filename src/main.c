@@ -13,6 +13,7 @@
 #include "devices/echoClient.h"
 #include "devices/arpModule.h"
 #include "devices/wire.h"
+#include "devices/switch.h"
 
 static u64 time;
 static EventQueue eventQueue;
@@ -30,7 +31,6 @@ int main(int argc, char **argv) {
     card1.provider.layer1Provider = stableWire_create(1, 3, megaToUnit(300));
     card1.provider.layer1Provider->layer2Provider = &(card1.provider);
     card1.provider.onReceiveBuffer = GetFuncs(handleNICQueueInEvent);
-    card1.provider.onSendBuffer = GetFuncs(handleNICQueueOutEvent);
 
     u8 mac1[] = { 0x10, 0x10, 0x10, 0x10, 0x10, 0x10 };
     memcpy(card1.address, mac1, sizeof(MACAddress));
@@ -75,7 +75,6 @@ int main(int argc, char **argv) {
     card2.provider.layer1Provider = stableWire_create(1, 3, megaToUnit(300));
     card2.provider.layer1Provider->layer2Provider = &(card2.provider);
     card2.provider.onReceiveBuffer = GetFuncs(handleNICQueueInEvent);
-    card2.provider.onSendBuffer = GetFuncs(handleNICQueueOutEvent);
 
     ARPModule arp2 = {0};
     arp2.nic = &card2;
@@ -114,7 +113,27 @@ int main(int argc, char **argv) {
     u8 mac2[] = { 0x20, 0x20, 0x20, 0x20, 0x20, 0x20 };
     memcpy(card2.address, mac2, sizeof(MACAddress));
 
-    layer1Provider_connect(card1.provider.layer1Provider, card2.provider.layer1Provider);
+    Switch switch1 = {0};
+    switch1.deviceID = 3;
+    switch1.numPorts = 2;
+    switch1.ports = malloc(sizeof(SwitchPort) * switch1.numPorts);
+    
+    switch1.ports[0].deviceID = 3;
+    switch1.ports[0].portNumber = 0;
+    switch1.ports[0].switchDevice = &switch1;
+    switch1.ports[0].provider.layer1Provider = stableWire_create(1, 3, megaToUnit(300));
+    switch1.ports[0].provider.layer1Provider->layer2Provider = &(switch1.ports[0].provider);
+    switch1.ports[0].provider.onReceiveBuffer = GetFuncs(handleSwitchPortReceive);
+
+    switch1.ports[1].deviceID = 3;
+    switch1.ports[1].portNumber = 1;
+    switch1.ports[1].switchDevice = &switch1;
+    switch1.ports[1].provider.layer1Provider = stableWire_create(1, 3, megaToUnit(300));
+    switch1.ports[1].provider.layer1Provider->layer2Provider = &(switch1.ports[1].provider);
+    switch1.ports[1].provider.onReceiveBuffer = GetFuncs(handleSwitchPortReceive);
+
+    layer1Provider_connect(card1.provider.layer1Provider, switch1.ports[0].provider.layer1Provider);
+    layer1Provider_connect(card2.provider.layer1Provider, switch1.ports[1].provider.layer1Provider);
 
     // Set up initial traffic
     

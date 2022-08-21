@@ -36,14 +36,6 @@ void handleARPSendEvent(EventData data) {
     ARPRequestData *d = data;
     ARPModule *module = d->module;
 
-    // // For now, just forward data to NIC
-    // NICQueueOutData eventData = {
-    //     .card=module->nic,
-    //     .data=d->buffer,
-    //     .higherProtocol=EtherType_IPv4
-    // };
-    // PostEvent(module->deviceID, GetFuncs(handleNICQueueOutEvent), &eventData, NICQueueOutData, 0);
-
     // Check if we have the ip address in the table
     SLNode *node = sll_find(&(module->arpEntries->node), arpEntryFindByIP, &(d->addr));
     if (node == NULL) {
@@ -76,6 +68,7 @@ void handleARPSendEvent(EventData data) {
             .data=arpBuffer,
             .higherProtocol=EtherType_ARP
         };
+        macAddr_copy(arpRequestEvent.dstAddr, MACBroadcast);
         PostEvent(module->deviceID, GetFuncs(handleNICQueueOutEvent), &arpRequestEvent, NICQueueOutData, 0);
     
         IPStr str;
@@ -184,6 +177,9 @@ void handleARPResponseEvent(EventData data) {
             .data=newBuff,
             .higherProtocol=EtherType_ARP
         };
+        // This needs to be target mac addr because we already switched
+        // target and sender in the header
+        macAddr_copy(arpRequestEvent.dstAddr, header->targetMacAddr);
         PostEvent(module->deviceID, GetFuncs(handleNICQueueOutEvent), &arpRequestEvent, NICQueueOutData, 0);
     
         MACStr macStr;

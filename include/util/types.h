@@ -34,5 +34,8 @@ IPAddress ipAddr_fromStr(IPStr str);
 typedef u8 MACAddress[6];
 typedef char MACStr[18];
 
+#define MACBroadcast ((MACAddress){ 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF })
+
+bool macAddr_cmp(MACAddress addr1, MACAddress addr2);
 void macAddr_copy(MACAddress dst, MACAddress src);
 void macAddr_toStr(MACAddress addr, MACStr outStr);
