@@ -30,6 +30,7 @@ void handleNICQueueOutEvent(EventData data) {
         .buffer=d->data,
         .protocol=d->higherProtocol
     };
+    macAddr_copy(newNode.macAddr, d->dstAddr);
     card->outgoingQueue = (NICOutQueueList*)sll_prepend(&(queue->node), &(newNode.node), sizeof(newNode));
 
     if (!card->isBusy) {
@@ -92,9 +93,8 @@ void handleNICProcessOutEvent(EventData data) {
         memset(ethHeader.preamble, EthPreambleStart, 7);
         memset(ethHeader.preamble + 7, EthPreambleEnd, 1);
 
-        // TODO: Be able to specify the destination mac address
-        // memcpy(ethHeader.dstAddr, card->provider.layer1Provider->other->layer2Provider->address, sizeof(MACAddress));
-        memcpy(ethHeader.srcAddr, card->address, sizeof(MACAddress));
+        macAddr_copy(ethHeader.dstAddr, lastNode.macAddr);
+        macAddr_copy(ethHeader.srcAddr, card->address);
 
         ethHeader.type = lastNode.protocol;
     }

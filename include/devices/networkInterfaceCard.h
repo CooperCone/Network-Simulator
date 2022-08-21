@@ -18,6 +18,7 @@ typedef struct {
 
     Buffer buffer;
     EtherType protocol;
+    MACAddress macAddr;
 } NICOutQueueList;
 
 typedef struct NetworkInterfaceCard {
