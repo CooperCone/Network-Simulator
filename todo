@@ -1,8 +1,10 @@
-- Should we have ports as a layer1 device?
+- IP
+  - Forwarding
+  - Routing
 
-- Unmanaged Switches
+- Routers
 
-- Better data injected into log messages
+DHCP
 
 - Reliability
   - Layer4
@@ -14,17 +16,21 @@
 
 - Scenario benchmarking
 
-- Routers
-
-- IP
-  - Forwarding
-  - Routing
-
 - TCP
   - Handshake
   - Reliability
   - Congestion control
   - Flow control
+
+ipv6 tunnels
+
+sdn match and action
+
+icmp
+
+dns
+
+nat
 
 ftp
 

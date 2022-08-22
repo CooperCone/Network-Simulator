@@ -7,6 +7,7 @@
 #include "event.h"
 #include "bufferQueue.h"
 #include "util/types.h"
+#include "collections/linkedList.h"
 
 #include <stdbool.h>
 
@@ -31,6 +32,16 @@ typedef struct {
 } IPHeader;
 #pragma pack(pop)
 
+typedef struct {
+    SLNode node;
+
+    IPAddress networkAddr;
+    SubnetMask mask;
+    u64 interfaceNumber; // TODO: Should this be a pointer?
+} RoutingTable;
+
+RoutingTable *routingTable_addEntry(IPAddress addr, SubnetMask mask, u64 interfaceNumber);
+
 typedef struct IPModule {
     struct ARPModule *arpModule;
     struct UDPModule *udpModule;
@@ -44,6 +55,8 @@ typedef struct IPModule {
 
     BufferQueue outgoingQueue;
     BufferQueue incomingQueue;
+
+    RoutingTable *routingTable;
 
     bool isBusy;
 } IPModule;

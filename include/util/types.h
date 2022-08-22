@@ -27,6 +27,7 @@ typedef union {
     u8 bs[4];
 } IPAddress;
 typedef char IPStr[16];
+typedef u8 SubnetMask; // Number of bits in the network part
 
 void ipAddr_toStr(IPAddress addr, IPStr outStr);
 IPAddress ipAddr_fromStr(IPStr str);

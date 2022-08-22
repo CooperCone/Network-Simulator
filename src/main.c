@@ -49,6 +49,7 @@ int main(int argc, char **argv) {
     module1.arpModule = &arp1;
     module1.onReceiveBuffer = GetFuncs(handleIPModuleQueueInEvent);
     module1.onSendBuffer = GetFuncs(handleIPModuleQueueOutEvent);
+    module1.routingTable = routingTable_addEntry(ipAddr_fromStr("192.168.1.2"), 32, 0);
 
     arp1.ipModule = &module1;
     card1.ipModule = &module1;
@@ -90,6 +91,7 @@ int main(int argc, char **argv) {
     module2.arpModule = &arp2;
     module2.onReceiveBuffer = GetFuncs(handleIPModuleQueueInEvent);
     module2.onSendBuffer = GetFuncs(handleIPModuleQueueOutEvent);
+    module2.routingTable = routingTable_addEntry(ipAddr_fromStr("192.168.1.1"), 32, 0);
 
     arp2.ipModule = &module2;
     card2.ipModule = &module2;
